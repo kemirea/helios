@@ -4,6 +4,9 @@ import android.Manifest.permission.SET_WALLPAPER
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.Toast
+import android.widget.Toast.LENGTH_SHORT
 
 const val SET_WALLPAPER_PERMISSION_REQUEST = 0
 class MainActivity : AppCompatActivity() {
@@ -39,9 +42,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (hasPermissions) {
-            mWallpaperHelper.setWallpaper();
-        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -59,5 +59,16 @@ class MainActivity : AppCompatActivity() {
                 return
             }
         }
+    }
+
+    fun onApplyClicked(view: View) {
+        if (hasPermissions) {
+            mWallpaperHelper.setWallpaper();
+        }
+        Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
+    }
+
+    fun onRevertClicked(view: View) {
+        Toast.makeText(this, "Wallpaper reverted!", LENGTH_SHORT).show()
     }
 }
