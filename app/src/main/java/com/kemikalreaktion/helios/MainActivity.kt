@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
 import android.widget.ImageView
+import kotlinx.coroutines.runBlocking
 
 
 private const val REQUEST_CODE_PERMISSIONS = 0
@@ -24,6 +25,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mWallpaperHelper = WallpaperHelper(this)
+
+        // load last saved wallpaper
+        val view = findViewById<ImageView>(R.id.preview_day)
+        runBlocking {
+            val bmp = mWallpaperHelper.getSavedWallpaperAsync().await()
+            bmp?.let {
+                view.setImageBitmap(bmp)
+            }
+        }
     }
 
     override fun onStart() {

@@ -3,10 +3,20 @@ package com.kemikalreaktion.helios
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 
 import java.io.IOException
+
+private const val WALLPAPER_FILENAME = "wallpaper.png"
 
 class WallpaperHelper(private val mContext: Context) {
     private val mWallpaperManager: WallpaperManager
@@ -55,8 +65,28 @@ class WallpaperHelper(private val mContext: Context) {
     }
 
     fun addWallpaperAndReset(): Drawable? {
-        mNewWallpaper = mWallpaperManager.drawable
+        mWallpaperManager.drawable?.let {
+            val wp = mWallpaperManager.drawable
+            mNewWallpaper = wp
+            saveWallpaper(Util.drawableToBitmap(wp))
+        }
         reset()
         return mNewWallpaper
+    }
+
+    fun saveWallpaper(wallpaper: Bitmap) {
+        GlobalScope.launch {
+            val file = File(mContext.filesDir, WALLPAPER_FILENAME)
+            val os = FileOutputStream(file)
+            wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
+            os.close()
+        }
+    }
+
+    fun getSavedWallpaperAsync(): Deferred<Bitmap?> {
+        return GlobalScope.async {
+            val file = File(mContext.filesDir, WALLPAPER_FILENAME)
+            if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
+        }
     }
 }
