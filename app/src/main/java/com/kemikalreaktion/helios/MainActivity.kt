@@ -14,8 +14,11 @@ import kotlinx.coroutines.runBlocking
 
 
 private const val REQUEST_CODE_PERMISSIONS = 0
-private const val REQUEST_CODE_CHOOSE_IMAGE = 1
-private const val REQUEST_CODE_CROP_IMAGE = 2
+// TODO: figure out a better way to track the current wallpaper being changed
+private const val REQUEST_CODE_CHOOSE_IMAGE_DAY = 1
+private const val REQUEST_CODE_CHOOSE_IMAGE_NIGHT = 2
+private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
+private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mWallpaperHelper: WallpaperHelper
@@ -27,11 +30,16 @@ class MainActivity : AppCompatActivity() {
         mWallpaperHelper = WallpaperHelper(this)
 
         // load last saved wallpaper
-        val view = findViewById<ImageView>(R.id.preview_day)
+        val viewDay = findViewById<ImageView>(R.id.preview_day)
+        val viewNight = findViewById<ImageView>(R.id.preview_night)
         runBlocking {
-            val bmp = mWallpaperHelper.getSavedWallpaperAsync().await()
-            bmp?.let {
-                view.setImageBitmap(bmp)
+            val bmpDay = mWallpaperHelper.getSavedWallpaperAsync(PaperTime.DAY).await()
+            val bmpNight = mWallpaperHelper.getSavedWallpaperAsync(PaperTime.NIGHT).await()
+            bmpDay?.let {
+                viewDay.setImageBitmap(bmpDay)
+            }
+            bmpNight?.let {
+                viewNight.setImageBitmap(bmpNight)
             }
         }
     }
@@ -55,37 +63,61 @@ class MainActivity : AppCompatActivity() {
                     hasPermissions = true;
                 }
             }
-            REQUEST_CODE_CHOOSE_IMAGE -> {
+            REQUEST_CODE_CHOOSE_IMAGE_DAY -> {
                 if (resultCode == RESULT_OK) {
                     val cropIntent = mWallpaperHelper.getCropIntent(intent?.data!!)
-                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE) }
+                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE_DAY) }
                 }
             }
-            REQUEST_CODE_CROP_IMAGE -> {
+            REQUEST_CODE_CHOOSE_IMAGE_NIGHT -> {
+                if (resultCode == RESULT_OK) {
+                    val cropIntent = mWallpaperHelper.getCropIntent(intent?.data!!)
+                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE_NIGHT) }
+                }
+            }
+            REQUEST_CODE_CROP_IMAGE_DAY -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
                     val view = findViewById<ImageView>(R.id.preview_day)
-                    view.setImageDrawable(mWallpaperHelper.addWallpaperAndReset())
+                    view.setImageBitmap(mWallpaperHelper.updateWallpaper(PaperTime.DAY))
+                    mWallpaperHelper.reset()
+                }
+            }
+            REQUEST_CODE_CROP_IMAGE_NIGHT -> {
+                if (resultCode == RESULT_OK && hasPermissions) {
+                    val view = findViewById<ImageView>(R.id.preview_night)
+                    view.setImageBitmap(mWallpaperHelper.updateWallpaper(PaperTime.NIGHT))
+                    mWallpaperHelper.reset()
                 }
             }
         }
     }
 
     fun onApplyClicked(view: View) {
-        if (mWallpaperHelper.set()) {
+        if (mWallpaperHelper.apply()) {
             Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
         }
     }
 
     fun onResetClicked(view: View) {
         if (mWallpaperHelper.reset()) {
-            Toast.makeText(this, "Wallpaper reverted!", LENGTH_SHORT).show()
+            Toast.makeText(this, "Wallpaper reset!", LENGTH_SHORT).show()
         }
     }
 
     fun onChooseClicked(view: View) {
-        val intent = Intent(ACTION_PICK)
-        intent.type = "image/*"
-        intent.action = Intent.ACTION_GET_CONTENT
-        startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE);
+        when(view.id) {
+            R.id.button_choose_day -> {
+                val intent = Intent(ACTION_PICK)
+                intent.type = "image/*"
+                intent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_DAY)
+            }
+            R.id.button_choose_night -> {
+                val intent = Intent(ACTION_PICK)
+                intent.type = "image/*"
+                intent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_NIGHT)
+            }
+        }
     }
 }
