@@ -1,6 +1,6 @@
 package com.kemikalreaktion.helios
 
-import android.app.Activity
+import android.Manifest
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -8,13 +8,17 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import android.content.Intent
 import android.content.Intent.ACTION_PICK
+import android.content.pm.PackageManager
+import android.widget.ImageView
 
 
-private const val REQUEST_CODE_CHOOSE_IMAGE = 0;
-private const val REQUEST_CODE_CROP_IMAGE = 1;
+private const val REQUEST_CODE_PERMISSIONS = 0
+private const val REQUEST_CODE_CHOOSE_IMAGE = 1
+private const val REQUEST_CODE_CROP_IMAGE = 2
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var mWallpaperHelper : WallpaperHelper
+    private lateinit var mWallpaperHelper: WallpaperHelper
+    private var hasPermissions = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,6 +28,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        hasPermissions = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        if (!hasPermissions) {
+            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
+        }
     }
 
     override fun onResume() {
@@ -31,16 +39,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
-        if (requestCode == REQUEST_CODE_CHOOSE_IMAGE && resultCode == Activity.RESULT_OK) {
-            val imageUri = intent!!.data
-            /*val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, imageUri)
-            mWallpaperHelper.set(bitmap)*/
-
-
-            val cropIntent = mWallpaperHelper.getCropIntent(imageUri!!)
-            startActivityForResult(cropIntent!!, REQUEST_CODE_CROP_IMAGE);
-        } else if (requestCode == REQUEST_CODE_CROP_IMAGE && resultCode == Activity.RESULT_OK) {
-
+        when(requestCode) {
+            REQUEST_CODE_PERMISSIONS -> {
+                if (resultCode == RESULT_OK) {
+                    hasPermissions = true;
+                }
+            }
+            REQUEST_CODE_CHOOSE_IMAGE -> {
+                if (resultCode == RESULT_OK) {
+                    val cropIntent = mWallpaperHelper.getCropIntent(intent!!.data!!)
+                    startActivityForResult(cropIntent!!, REQUEST_CODE_CROP_IMAGE)
+                }
+            }
+            REQUEST_CODE_CROP_IMAGE -> {
+                if (resultCode == RESULT_OK && hasPermissions) {
+                    val view = findViewById<ImageView>(R.id.preview_day)
+                    view.setImageDrawable(mWallpaperHelper.addWallpaperAndReset())
+                }
+            }
         }
     }
 
@@ -49,8 +65,8 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
     }
 
-    fun onRevertClicked(view: View) {
-        mWallpaperHelper.revert()
+    fun onResetClicked(view: View) {
+        mWallpaperHelper.reset()
         Toast.makeText(this, "Wallpaper reverted!", LENGTH_SHORT).show()
     }
 
