@@ -47,8 +47,8 @@ class MainActivity : AppCompatActivity() {
             }
             REQUEST_CODE_CHOOSE_IMAGE -> {
                 if (resultCode == RESULT_OK) {
-                    val cropIntent = mWallpaperHelper.getCropIntent(intent!!.data!!)
-                    startActivityForResult(cropIntent!!, REQUEST_CODE_CROP_IMAGE)
+                    val cropIntent = mWallpaperHelper.getCropIntent(intent?.data!!)
+                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE) }
                 }
             }
             REQUEST_CODE_CROP_IMAGE -> {
@@ -61,13 +61,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun onApplyClicked(view: View) {
-        mWallpaperHelper.set();
-        Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
+        if (mWallpaperHelper.set()) {
+            Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
+        }
     }
 
     fun onResetClicked(view: View) {
-        mWallpaperHelper.reset()
-        Toast.makeText(this, "Wallpaper reverted!", LENGTH_SHORT).show()
+        if (mWallpaperHelper.reset()) {
+            Toast.makeText(this, "Wallpaper reverted!", LENGTH_SHORT).show()
+        }
     }
 
     fun onChooseClicked(view: View) {
