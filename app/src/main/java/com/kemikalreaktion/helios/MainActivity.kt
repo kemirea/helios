@@ -8,10 +8,8 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import android.content.Intent
 import android.content.Intent.ACTION_PICK
-import android.content.pm.PackageManager
 import android.widget.ImageView
 import kotlinx.coroutines.runBlocking
-
 
 private const val REQUEST_CODE_PERMISSIONS = 0
 // TODO: figure out a better way to track the current wallpaper being changed
@@ -19,6 +17,11 @@ private const val REQUEST_CODE_CHOOSE_IMAGE_DAY = 1
 private const val REQUEST_CODE_CHOOSE_IMAGE_NIGHT = 2
 private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
 private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
+
+private val REQUIRED_PERMISSIONS = arrayOf(
+    Manifest.permission.READ_EXTERNAL_STORAGE,
+    Manifest.permission.ACCESS_COARSE_LOCATION
+)
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mWallpaperHelper: WallpaperHelper
@@ -46,10 +49,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        hasPermissions = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-        if (!hasPermissions) {
-            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), REQUEST_CODE_PERMISSIONS)
-        }
+        // TODO: proper permissions handling
+        // For now, this "just works"
+        requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
     }
 
     override fun onResume() {
