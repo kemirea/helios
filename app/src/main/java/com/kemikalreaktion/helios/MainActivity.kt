@@ -1,6 +1,6 @@
 package com.kemikalreaktion.helios
 
-import android.Manifest
+import android.Manifest.permission.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -19,18 +19,21 @@ private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
 private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
 
 private val REQUIRED_PERMISSIONS = arrayOf(
-    Manifest.permission.READ_EXTERNAL_STORAGE,
-    Manifest.permission.ACCESS_COARSE_LOCATION
+    READ_EXTERNAL_STORAGE,
+    ACCESS_COARSE_LOCATION,
+    ACCESS_FINE_LOCATION
 )
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mWallpaperHelper: WallpaperHelper
+    private lateinit var mLocationHelper: LocationHelper
     private var hasPermissions = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         mWallpaperHelper = WallpaperHelper(this)
+        mLocationHelper = LocationHelper(this)
 
         // load last saved wallpaper
         val viewDay = findViewById<ImageView>(R.id.preview_day)
@@ -56,6 +59,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        mLocationHelper.getLocation()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {

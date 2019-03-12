@@ -10,6 +10,9 @@ import com.bumptech.glide.Glide
 /**
  * Utility methods for handling mundane tasks
  */
+
+const val DEBUG_TAG = "DEBUG_CAT"
+
 object Util {
     fun drawableToBitmap(drawable: Drawable): Bitmap {
         val bmp: Bitmap
