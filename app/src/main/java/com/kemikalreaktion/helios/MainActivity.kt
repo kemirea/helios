@@ -22,9 +22,6 @@ private const val REQUEST_CODE_CHOOSE_IMAGE_NIGHT = 2
 private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
 private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
 
-const val ACTION_APPLY_WALLPAPER = "com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"
-const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
-
 private val REQUIRED_PERMISSIONS = arrayOf(
     READ_EXTERNAL_STORAGE,
     ACCESS_COARSE_LOCATION,

@@ -11,11 +11,6 @@ import java.util.*
  * Allows for better compatibility with modern APIs and Kotlin.
  */
 
-enum class PaperTime {
-    DAY,
-    NIGHT
-}
-
 class SunCalculator(mLocation: Location) {
     private val mCalculator: SunriseSunsetCalculator = SunriseSunsetCalculator(
         com.luckycatlabs.sunrisesunset.dto.Location(mLocation.latitude, mLocation.longitude), TimeZone.getDefault())

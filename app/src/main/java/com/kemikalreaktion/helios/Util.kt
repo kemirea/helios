@@ -13,6 +13,15 @@ import com.bumptech.glide.Glide
 
 const val DEBUG_TAG = "DEBUG_CAT"
 
+// constants for intents
+const val ACTION_APPLY_WALLPAPER = "com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"
+const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
+
+enum class PaperTime {
+    DAY,
+    NIGHT
+}
+
 object Util {
     fun drawableToBitmap(drawable: Drawable): Bitmap {
         val bmp: Bitmap
