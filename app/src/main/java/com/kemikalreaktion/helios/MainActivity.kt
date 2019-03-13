@@ -2,6 +2,7 @@ package com.kemikalreaktion.helios
 
 import android.Manifest.permission.*
 import android.app.AlarmManager
+import android.app.AlarmManager.INTERVAL_DAY
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
@@ -129,10 +130,21 @@ class MainActivity : AppCompatActivity() {
 
     fun onApplyClicked(view: View) {
         mLocationHelper.getLocation()?.let {
-            location -> mWallpaperHelper.apply(SunCalculator(location).getCurrentPaperTime())
+            location ->
+            val calculator = SunCalculator(location)
+            val mAlarmManager: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            mWallpaperHelper.apply(calculator.getCurrentPaperTime())
+
+            val sunriseIntent = mWallpaperHelper.getIntentForTime(PaperTime.DAY).let {
+                    intent -> PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
+            val sunsetIntent = mWallpaperHelper.getIntentForTime(PaperTime.NIGHT).let {
+                    intent -> PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
+            mAlarmManager.setInexactRepeating(AlarmManager.RTC, calculator.getSunrise().timeInMillis, INTERVAL_DAY, sunriseIntent)
+            mAlarmManager.setInexactRepeating(AlarmManager.RTC, calculator.getSunset().timeInMillis, INTERVAL_DAY, sunsetIntent)
         }
     }
 
+    // TODO: once alarms are confirmed working, we should update this to immediately preview/apply the selected wallpaper
     fun onTestClicked(view: View) {
         when(view.id) {
             R.id.button_test_day -> {
