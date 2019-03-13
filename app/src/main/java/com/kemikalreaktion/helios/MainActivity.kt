@@ -1,16 +1,19 @@
 package com.kemikalreaktion.helios
 
 import android.Manifest.permission.*
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
-import android.widget.Toast.LENGTH_SHORT
 import android.content.Intent
 import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
 import android.widget.ImageView
 import kotlinx.coroutines.runBlocking
+import java.util.*
 
 private const val REQUEST_CODE_PERMISSIONS = 0
 // TODO: figure out a better way to track the current wallpaper being changed
@@ -93,29 +96,21 @@ class MainActivity : AppCompatActivity() {
             REQUEST_CODE_CROP_IMAGE_DAY -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
                     val view = findViewById<ImageView>(R.id.preview_day)
-                    view.setImageBitmap(mWallpaperHelper.updateWallpaper(PaperTime.DAY))
+                    mWallpaperHelper.updateWallpaperForTime(PaperTime.DAY)?.let {
+                        bmp -> view.setImageBitmap(bmp)
+                    }
                     mWallpaperHelper.reset()
                 }
             }
             REQUEST_CODE_CROP_IMAGE_NIGHT -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
                     val view = findViewById<ImageView>(R.id.preview_night)
-                    view.setImageBitmap(mWallpaperHelper.updateWallpaper(PaperTime.NIGHT))
+                    mWallpaperHelper.updateWallpaperForTime(PaperTime.NIGHT)?.let {
+                        bmp -> view.setImageBitmap(bmp)
+                    }
                     mWallpaperHelper.reset()
                 }
             }
-        }
-    }
-
-    fun onApplyClicked(view: View) {
-        if (mWallpaperHelper.apply()) {
-            Toast.makeText(this, "Wallpaper applied!", LENGTH_SHORT).show()
-        }
-    }
-
-    fun onResetClicked(view: View) {
-        if (mWallpaperHelper.reset()) {
-            Toast.makeText(this, "Wallpaper reset!", LENGTH_SHORT).show()
         }
     }
 
@@ -139,18 +134,18 @@ class MainActivity : AppCompatActivity() {
     fun onTestClicked(view: View) {
         when(view.id) {
             R.id.button_test_day -> {
-                val intent = Intent(this, WallpaperBroadcastReceiver::class.java).let {
-                    intent -> intent.action = ACTION_APPLY_WALLPAPER
-                    intent.putExtra(EXTRA_PAPER_TIME, PaperTime.DAY)
-                }
-                sendBroadcast(intent)
+                // Test intent for setting day wallpaper. Intent is sent 5 seconds later.
+                val sunriseIntent = mWallpaperHelper.getIntentForTime(PaperTime.DAY).let {
+                        intent -> PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
+                val mAlarmManager: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                mAlarmManager.set(AlarmManager.RTC, Calendar.getInstance().timeInMillis+5000, sunriseIntent)
             }
             R.id.button_test_night -> {
-                val intent = Intent(this, WallpaperBroadcastReceiver::class.java).let {
-                        intent -> intent.action = ACTION_APPLY_WALLPAPER
-                    intent.putExtra(EXTRA_PAPER_TIME, PaperTime.NIGHT)
-                }
-                sendBroadcast(intent)
+                // Test intent for setting night wallpaper. Intent is sent 5 seconds later.
+                val sunriseIntent = mWallpaperHelper.getIntentForTime(PaperTime.NIGHT).let {
+                        intent -> PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
+                val mAlarmManager: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                mAlarmManager.set(AlarmManager.RTC, Calendar.getInstance().timeInMillis+5000, sunriseIntent)
             }
         }
     }
