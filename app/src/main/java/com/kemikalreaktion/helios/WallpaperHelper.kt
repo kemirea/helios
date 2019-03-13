@@ -1,5 +1,7 @@
 package com.kemikalreaktion.helios
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.app.WallpaperManager
 import android.content.Context
 import android.content.Intent
@@ -116,6 +118,25 @@ class WallpaperHelper(private val mContext: Context) {
         return Intent(mContext, WallpaperBroadcastReceiver::class.java).let {
                 intent -> intent.action = ACTION_APPLY_WALLPAPER
             intent.putExtra(EXTRA_PAPER_TIME, time.ordinal)
+        }
+    }
+
+    fun updatePaperSchedule() {
+        LocationHelper(mContext).getLocation()?.let {
+                location ->
+            val calculator = SunCalculator(location)
+            val mAlarmManager: AlarmManager = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            val sunriseIntent = getIntentForTime(PaperTime.DAY).let {
+                    intent -> PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            val sunsetIntent = getIntentForTime(PaperTime.NIGHT).let {
+                    intent -> PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            mAlarmManager.setInexactRepeating(
+                AlarmManager.RTC, calculator.getSunrise().timeInMillis,
+                AlarmManager.INTERVAL_DAY, sunriseIntent)
+            mAlarmManager.setInexactRepeating(
+                AlarmManager.RTC, calculator.getSunset().timeInMillis,
+                AlarmManager.INTERVAL_DAY, sunsetIntent)
         }
     }
 }

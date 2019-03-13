@@ -17,6 +17,9 @@ class WallpaperBroadcastReceiver : BroadcastReceiver() {
                 PaperTime.DAY -> {
                     WallpaperHelper(context).apply(time)
                     Log.v(DEBUG_TAG, "setting day wallpaper")
+
+                    // first wallpaper update of the day, also update alarms
+                    WallpaperHelper(context).updatePaperSchedule()
                 }
                 PaperTime.NIGHT -> {
                     WallpaperHelper(context).apply(time)
