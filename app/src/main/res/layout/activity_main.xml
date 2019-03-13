@@ -95,4 +95,16 @@
                 app:layout_constraintTop_toBottomOf="@+id/button_choose_night"
                 android:onClick="onTestClicked"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <Button
+            android:id="@+id/button_apply"
+            android:text="Apply"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chooser_layout"
+            android:onClick="onApplyClicked"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

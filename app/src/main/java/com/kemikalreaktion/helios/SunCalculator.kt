@@ -1,10 +1,9 @@
 package com.kemikalreaktion.helios
 
 import android.location.Location
+import android.util.Log
 import com.luckycatlabs.sunrisesunset.SunriseSunsetCalculator
 import java.util.*
-
-
 
 /**
  * Wrapper class for SunriseSunsetCalculator library
@@ -22,10 +21,23 @@ class SunCalculator(mLocation: Location) {
         com.luckycatlabs.sunrisesunset.dto.Location(mLocation.latitude, mLocation.longitude), TimeZone.getDefault())
 
     fun getSunrise(): Calendar {
-        return mCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
+        val sunrise = mCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
+        Log.v(DEBUG_TAG, "Sunrise time: ${sunrise.time}")
+        return sunrise
     }
 
     fun getSunset(): Calendar {
-        return mCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
+        val sunset = mCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
+        Log.v(DEBUG_TAG, "Sunrise time: ${sunset.time}")
+        return sunset
+    }
+
+    fun getCurrentPaperTime(): PaperTime {
+        val currentTime = Calendar.getInstance()
+        return if (currentTime > getSunrise() && currentTime < getSunset()) {
+            PaperTime.DAY
+        } else {
+            PaperTime.NIGHT
+        }
     }
 }

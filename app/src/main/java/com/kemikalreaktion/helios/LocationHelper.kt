@@ -19,18 +19,12 @@ import android.location.LocationManager.PASSIVE_PROVIDER
 
 class LocationHelper(private val mContext: Context) {
     private val mLocationManager: LocationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
-    var mCurrentLocation: Location? = null
 
-    fun getLocation() {
+    fun getLocation(): Location? {
         if (mContext.checkSelfPermission(ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
                 && mContext.checkSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) {
-            val location = mLocationManager.getLastKnownLocation(PASSIVE_PROVIDER)
-            mCurrentLocation = location
-            location?.let {
-                val calculator = SunCalculator(location)
-                android.util.Log.v(DEBUG_TAG, "Sunrise time: ${calculator.getSunrise().time}")
-                android.util.Log.v(DEBUG_TAG, "Sunset time: ${calculator.getSunset().time}")
-            }
+            return mLocationManager.getLastKnownLocation(PASSIVE_PROVIDER)
         }
+        return null
     }
 }

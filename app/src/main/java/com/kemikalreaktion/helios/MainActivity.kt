@@ -71,7 +71,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        mLocationHelper.getLocation()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
@@ -128,6 +127,12 @@ class MainActivity : AppCompatActivity() {
                 intent.action = Intent.ACTION_GET_CONTENT
                 startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_NIGHT)
             }
+        }
+    }
+
+    fun onApplyClicked(view: View) {
+        mLocationHelper.getLocation()?.let {
+            location -> mWallpaperHelper.apply(SunCalculator(location).getCurrentPaperTime())
         }
     }
 
