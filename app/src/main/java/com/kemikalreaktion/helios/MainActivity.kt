@@ -19,6 +19,9 @@ private const val REQUEST_CODE_CHOOSE_IMAGE_NIGHT = 2
 private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
 private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
 
+const val ACTION_APPLY_WALLPAPER = "com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"
+const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
+
 private val REQUIRED_PERMISSIONS = arrayOf(
     READ_EXTERNAL_STORAGE,
     ACCESS_COARSE_LOCATION,
@@ -129,6 +132,25 @@ class MainActivity : AppCompatActivity() {
                 intent.type = "image/*"
                 intent.action = Intent.ACTION_GET_CONTENT
                 startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_NIGHT)
+            }
+        }
+    }
+
+    fun onTestClicked(view: View) {
+        when(view.id) {
+            R.id.button_test_day -> {
+                val intent = Intent(this, WallpaperBroadcastReceiver::class.java).let {
+                    intent -> intent.action = ACTION_APPLY_WALLPAPER
+                    intent.putExtra(EXTRA_PAPER_TIME, PaperTime.DAY)
+                }
+                sendBroadcast(intent)
+            }
+            R.id.button_test_night -> {
+                val intent = Intent(this, WallpaperBroadcastReceiver::class.java).let {
+                        intent -> intent.action = ACTION_APPLY_WALLPAPER
+                    intent.putExtra(EXTRA_PAPER_TIME, PaperTime.NIGHT)
+                }
+                sendBroadcast(intent)
             }
         }
     }

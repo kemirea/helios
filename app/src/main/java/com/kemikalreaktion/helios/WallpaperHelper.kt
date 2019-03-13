@@ -16,11 +16,6 @@ import java.io.IOException
 private const val FILENAME_WALLPAPER_DAY = "wallpaper_day.png"
 private const val FILENAME_WALLPAPER_NIGHT = "wallpaper_night.png"
 
-enum class PaperTime {
-    DAY,
-    NIGHT
-}
-
 class WallpaperHelper(private val mContext: Context) {
     private val mWallpaperManager: WallpaperManager
             = mContext.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
@@ -35,6 +30,14 @@ class WallpaperHelper(private val mContext: Context) {
             return set(mDayWallpaper)
         }
         return false
+    }
+
+    fun apply(time: PaperTime) {
+        runBlocking {
+            getSavedWallpaperAsync(time).await()?.let {
+                    img -> set(img)
+            }
+        }
     }
 
     private fun set(bitmap: Bitmap?): Boolean {

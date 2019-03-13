@@ -23,6 +23,11 @@
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
+        <receiver android:name=".WallpaperBroadcastReceiver"  android:exported="true">
+            <intent-filter>
+                <action android:name="com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
