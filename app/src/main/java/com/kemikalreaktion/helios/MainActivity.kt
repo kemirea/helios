@@ -8,6 +8,7 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 import android.content.Intent
 import android.content.Intent.ACTION_PICK
+import android.content.pm.PackageManager
 import android.widget.ImageView
 import kotlinx.coroutines.runBlocking
 
@@ -27,7 +28,7 @@ private val REQUIRED_PERMISSIONS = arrayOf(
 class MainActivity : AppCompatActivity() {
     private lateinit var mWallpaperHelper: WallpaperHelper
     private lateinit var mLocationHelper: LocationHelper
-    private var hasPermissions = false
+    private var hasPermissions = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +55,12 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         // TODO: proper permissions handling
         // For now, this "just works"
-        requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+        for (permission in REQUIRED_PERMISSIONS) {
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                hasPermissions = false
+            }
+        }
+        if (!hasPermissions) requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
     }
 
     override fun onResume() {
