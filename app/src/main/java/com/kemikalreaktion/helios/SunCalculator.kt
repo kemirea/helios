@@ -11,18 +11,18 @@ import java.util.*
  * Allows for better compatibility with modern APIs and Kotlin.
  */
 
-class SunCalculator(mLocation: Location) {
-    private val mCalculator: SunriseSunsetCalculator = SunriseSunsetCalculator(
-        com.luckycatlabs.sunrisesunset.dto.Location(mLocation.latitude, mLocation.longitude), TimeZone.getDefault())
+class SunCalculator(location: Location) {
+    private val calculator: SunriseSunsetCalculator = SunriseSunsetCalculator(
+        com.luckycatlabs.sunrisesunset.dto.Location(location.latitude, location.longitude), TimeZone.getDefault())
 
     fun getSunrise(): Calendar {
-        val sunrise = mCalculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
+        val sunrise = calculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
         Log.v(DEBUG_TAG, "Sunrise time: ${sunrise.time}")
         return sunrise
     }
 
     fun getSunset(): Calendar {
-        val sunset = mCalculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
+        val sunset = calculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
         Log.v(DEBUG_TAG, "Sunrise time: ${sunset.time}")
         return sunset
     }

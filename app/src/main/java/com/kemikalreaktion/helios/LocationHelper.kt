@@ -9,7 +9,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.location.LocationManager.PASSIVE_PROVIDER
 
-
 /**
  * TODO:
  *  - Save last known location to SharedPreferences
@@ -17,13 +16,13 @@ import android.location.LocationManager.PASSIVE_PROVIDER
  *  - How to handle null location?
  */
 
-class LocationHelper(private val mContext: Context) {
-    private val mLocationManager: LocationManager = mContext.getSystemService(LOCATION_SERVICE) as LocationManager
+class LocationHelper(private val context: Context) {
+    private val locationManager: LocationManager = context.getSystemService(LOCATION_SERVICE) as LocationManager
 
     fun getLocation(): Location? {
-        if (mContext.checkSelfPermission(ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
-                && mContext.checkSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) {
-            return mLocationManager.getLastKnownLocation(PASSIVE_PROVIDER)
+        if (context.checkSelfPermission(ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED
+                && context.checkSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED) {
+            return locationManager.getLastKnownLocation(PASSIVE_PROVIDER)
         }
         return null
     }

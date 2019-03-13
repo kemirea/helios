@@ -17,6 +17,8 @@ const val DEBUG_TAG = "DEBUG_CAT"
 const val ACTION_APPLY_WALLPAPER = "com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"
 const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
 
+// STOP
+// IT'S PAPERTIME
 enum class PaperTime {
     DAY,
     NIGHT

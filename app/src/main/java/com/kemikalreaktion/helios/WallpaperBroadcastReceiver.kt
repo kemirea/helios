@@ -3,7 +3,6 @@ package com.kemikalreaktion.helios
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 
 /**
  * Handle applying wallpaper when alarm goes off
@@ -16,14 +15,12 @@ class WallpaperBroadcastReceiver : BroadcastReceiver() {
             when (time) {
                 PaperTime.DAY -> {
                     WallpaperHelper(context).apply(time)
-                    Log.v(DEBUG_TAG, "setting day wallpaper")
 
                     // first wallpaper update of the day, also update alarms
                     WallpaperHelper(context).updatePaperSchedule()
                 }
                 PaperTime.NIGHT -> {
                     WallpaperHelper(context).apply(time)
-                    Log.v(DEBUG_TAG, "setting night wallpaper")
                 }
             }
         }

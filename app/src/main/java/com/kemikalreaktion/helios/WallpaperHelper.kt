@@ -19,19 +19,17 @@ private const val FILENAME_WALLPAPER_DAY = "wallpaper_day.png"
 private const val FILENAME_WALLPAPER_NIGHT = "wallpaper_night.png"
 
 class WallpaperHelper(private val mContext: Context) {
-    private val mWallpaperManager: WallpaperManager
-            = mContext.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
-    private var mCurrentWallpaper: Drawable? = null
-    private var mDayWallpaper: Bitmap? = null
-    private var mNightWallpaper: Bitmap? = null
+    private val wallpaperManager: WallpaperManager =
+        mContext.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
+    private var currentWallpaper: Drawable? = null
+    private var dayWallpaper: Bitmap? = null
+    private var nightWallpaper: Bitmap? = null
 
     // get and apply the wallpaper stored for the specified PaperTime
     // if no wallpaper was saved, do nothing
     fun apply(time: PaperTime) {
         runBlocking {
-            getSavedWallpaperAsync(time).await()?.let {
-                    img -> set(img)
-            }
+            getSavedWallpaperAsync(time).await()?.let { img -> set(img) }
         }
     }
 
@@ -39,7 +37,7 @@ class WallpaperHelper(private val mContext: Context) {
     private fun set(bitmap: Bitmap?): Boolean {
         bitmap?.let {
             try {
-                mWallpaperManager.setBitmap(bitmap)
+                wallpaperManager.setBitmap(bitmap)
             } catch (e: IOException) {
                 e.printStackTrace()
                 return false
@@ -50,10 +48,8 @@ class WallpaperHelper(private val mContext: Context) {
     }
 
     fun reset(): Boolean {
-        val wp = mCurrentWallpaper
-        wp?.let {
-            return set(Util.drawableToBitmap(wp))
-        }
+        val wp = currentWallpaper
+        wp?.let { return set(Util.drawableToBitmap(wp)) }
         return false
     }
 
@@ -62,18 +58,18 @@ class WallpaperHelper(private val mContext: Context) {
     // drawable in this situation
     fun getCropIntent(imageUri: Uri): Intent? {
         try {
-            mCurrentWallpaper = mWallpaperManager.drawable
-            return mWallpaperManager.getCropAndSetWallpaperIntent(imageUri)
+            currentWallpaper = wallpaperManager.drawable
+            return wallpaperManager.getCropAndSetWallpaperIntent(imageUri)
         } catch (e: IllegalArgumentException) {
-            e.printStackTrace();
+            e.printStackTrace()
         }
-        return null;
+        return null
     }
 
     // update the saved wallpaper for given PaperTime
     fun updateWallpaperForTime(time: PaperTime): Bitmap? {
-        mWallpaperManager.drawable?.let {
-            val wallpaper = Util.drawableToBitmap(mWallpaperManager.drawable)
+        wallpaperManager.drawable?.let {
+            val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
             // save wallpaper to internal storage
             GlobalScope.launch {
                 val file = File(mContext.filesDir, getFilenameForTime(time))
@@ -82,11 +78,7 @@ class WallpaperHelper(private val mContext: Context) {
                 os.close()
             }
 
-            if (time == PaperTime.DAY)
-                mDayWallpaper = wallpaper
-            else
-                mNightWallpaper = wallpaper
-
+            if (time == PaperTime.DAY) dayWallpaper = wallpaper else nightWallpaper = wallpaper
             return wallpaper
         }
         return null
@@ -98,12 +90,11 @@ class WallpaperHelper(private val mContext: Context) {
             if (file.exists()) {
                 val bmp = BitmapFactory.decodeFile(file.absolutePath)
                 when (time) {
-                    PaperTime.DAY -> mDayWallpaper = bmp
-                    PaperTime.NIGHT -> mNightWallpaper = bmp
+                    PaperTime.DAY -> dayWallpaper = bmp
+                    PaperTime.NIGHT -> nightWallpaper = bmp
                 }
                 bmp
-            }
-            else null
+            } else null
         }
     }
 
@@ -115,22 +106,21 @@ class WallpaperHelper(private val mContext: Context) {
     }
 
     fun getIntentForTime(time: PaperTime): Intent {
-        return Intent(mContext, WallpaperBroadcastReceiver::class.java).let {
-                intent -> intent.action = ACTION_APPLY_WALLPAPER
+        return Intent(mContext, WallpaperBroadcastReceiver::class.java).let { intent ->
+            intent.action = ACTION_APPLY_WALLPAPER
             intent.putExtra(EXTRA_PAPER_TIME, time.ordinal)
         }
     }
 
     fun updatePaperSchedule() {
-        LocationHelper(mContext).getLocation()?.let {
-                location ->
+        LocationHelper(mContext).getLocation()?.let { location ->
             val calculator = SunCalculator(location)
             val mAlarmManager: AlarmManager = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            val sunriseIntent = getIntentForTime(PaperTime.DAY).let {
-                    intent -> PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
-            val sunsetIntent = getIntentForTime(PaperTime.NIGHT).let {
-                    intent -> PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            val sunriseIntent = getIntentForTime(PaperTime.DAY).let { intent ->
+                PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            val sunsetIntent = getIntentForTime(PaperTime.NIGHT).let { intent ->
+                PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
             mAlarmManager.setInexactRepeating(
                 AlarmManager.RTC, calculator.getSunrise().timeInMillis,
                 AlarmManager.INTERVAL_DAY, sunriseIntent)
