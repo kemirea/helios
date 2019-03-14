@@ -121,8 +121,8 @@ class MainActivity : AppCompatActivity() {
         locationHelper.getLocation()?.let { location ->
             val calculator = SunCalculator(location)
             wallpaperHelper.apply(calculator.getCurrentPaperTime())
+            wallpaperHelper.scheduleNextUpdate(calculator.getCurrentPaperTime())
         }
-        wallpaperHelper.updatePaperSchedule()
     }
 
     // TODO: once alarms are confirmed working, we should update this to immediately preview/apply the selected wallpaper
