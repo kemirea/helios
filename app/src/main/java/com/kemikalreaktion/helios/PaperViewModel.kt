@@ -17,6 +17,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 import java.io.IOException
+import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 private const val FILENAME_WALLPAPER_DAY = "wallpaper_day.png"
@@ -98,28 +99,47 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
         return null
     }
 
-    // update the saved wallpaper for given PaperTime
-    fun addPaperForTime(time: PaperTime): Bitmap? {
+    // add the wallpaper for given time
+    fun addPaperForTime(time: Calendar): Bitmap? {
         wallpaperManager.drawable?.let {
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            // save wallpaper to internal storage
+            val paper = Paper(time, 0)
+
             GlobalScope.launch {
+                // save wallpaper to internal storage
+                val file = File(context.filesDir, paper.filename)
+                val os = FileOutputStream(file)
+                wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
+                os.close()
+
+                // add paper object to repository
+                paperRepository.insert(paper)
+            }
+
+            reset()
+            return wallpaper
+        }
+        return null
+    }
+
+    // add the wallpaper for given PaperTime
+    fun addPaperForPaperTime(time: PaperTime): Bitmap? {
+        if (wallpaperManager.drawable != null && calculator != null){
+            val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
+            val paper = Paper(calculator.getByPaperTime(time), 0, time)
+
+            GlobalScope.launch {
+                // save wallpaper to internal storage
                 val file = File(context.filesDir, getFilenameForTime(time))
                 val os = FileOutputStream(file)
                 wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
                 os.close()
+
+                // add paper object to repository
+                paperRepository.insert(paper)
             }
 
-            calculator?.let{
-                val paper = if(time == PaperTime.SUNRISE)
-                    Paper(calculator.getSunrise(), 0, time)
-                else
-                    Paper(calculator.getSunset(), 0, time)
-
-
-            }
-
-            if (time == PaperTime.SUNRISE) dayWallpaper = wallpaper else nightWallpaper = wallpaper
+            reset()
             return wallpaper
         }
         return null

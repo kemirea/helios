@@ -5,7 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
 
-@Entity(tableName = "paper_table", primaryKeys = arrayOf("time", "paper_time"))
+@Entity(tableName = "paper_table", primaryKeys = ["time", "paper_time"])
 data class Paper(@PrimaryKey val time: Calendar,
                  val filename: String,
                  val which: Int,

@@ -86,14 +86,14 @@ class MainActivity : AppCompatActivity() {
             REQUEST_CODE_CROP_IMAGE_DAY -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
                     val view = findViewById<ImageView>(R.id.preview_day)
-                    paperManager.addPaperForTime(PaperTime.SUNRISE)?.let { bmp -> view.setImageBitmap(bmp) }
+                    paperManager.addPaperForPaperTime(PaperTime.SUNRISE)?.let { bmp -> view.setImageBitmap(bmp) }
                     paperManager.reset()
                 }
             }
             REQUEST_CODE_CROP_IMAGE_NIGHT -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
                     val view = findViewById<ImageView>(R.id.preview_night)
-                    paperManager.addPaperForTime(PaperTime.SUNSET)?.let { bmp -> view.setImageBitmap(bmp) }
+                    paperManager.addPaperForPaperTime(PaperTime.SUNSET)?.let { bmp -> view.setImageBitmap(bmp) }
                     paperManager.reset()
                 }
             }
