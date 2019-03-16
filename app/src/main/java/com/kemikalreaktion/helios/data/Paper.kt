@@ -1,11 +1,12 @@
-package com.kemikalreaktion.helios
+package com.kemikalreaktion.helios.data
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.kemikalreaktion.helios.PaperTime
 import java.util.*
 
-@Entity(tableName = "paper_table", primaryKeys = ["time", "paper_time"])
+@Entity(tableName = "paper_table")
 data class Paper(@PrimaryKey val time: Calendar,
                  val filename: String,
                  val which: Int,

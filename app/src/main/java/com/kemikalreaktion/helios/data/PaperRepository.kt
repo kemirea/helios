@@ -1,7 +1,8 @@
-package com.kemikalreaktion.helios
+package com.kemikalreaktion.helios.data
 
 import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
+import com.kemikalreaktion.helios.PaperTime
 import java.util.*
 
 class PaperRepository(private val paperDao: PaperDao) {

@@ -12,8 +12,8 @@ class WallpaperBroadcastReceiver : BroadcastReceiver() {
         if (intent.action == ACTION_APPLY_WALLPAPER) {
             val index = intent.getIntExtra(EXTRA_PAPER_TIME, PaperTime.SUNRISE.ordinal)
             val time = PaperTime.values()[index]
-            PaperManager(context).apply(time)
-            PaperManager(context).scheduleNextUpdate(time)
+            PaperViewModel(context).apply(time)
+            PaperViewModel(context).scheduleNextUpdate(time)
         }
     }
 }

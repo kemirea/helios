@@ -1,7 +1,8 @@
-package com.kemikalreaktion.helios
+package com.kemikalreaktion.helios.data
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
+import com.kemikalreaktion.helios.PaperTime
 import java.util.*
 
 @Dao
@@ -22,5 +23,5 @@ interface PaperDao {
     fun getPaperByTime(time: Calendar): LiveData<Paper>
 
     @Query("SELECT * from paper_table where paper_time = :paperTime")
-    fun getPaperByPaperTime(paperTime: PaperTime): LiveData<Paper>
+    fun getPaperByPaperTime(paperTime: PaperTime): Paper?
 }

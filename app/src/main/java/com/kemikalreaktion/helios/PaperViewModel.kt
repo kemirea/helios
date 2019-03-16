@@ -12,6 +12,10 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import com.kemikalreaktion.helios.data.Paper
+import com.kemikalreaktion.helios.data.PaperDatabase
+import com.kemikalreaktion.helios.data.PaperRepository
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
@@ -20,13 +24,10 @@ import java.io.IOException
 import java.util.*
 import kotlin.coroutines.CoroutineContext
 
-private const val FILENAME_WALLPAPER_DAY = "wallpaper_day.png"
-private const val FILENAME_WALLPAPER_NIGHT = "wallpaper_night.png"
-
-class PaperManager(private val context: Application) : AndroidViewModel(context) {
+class PaperViewModel(private val context: Context) : ViewModel() {
     private val wallpaperManager = context.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
     private val locationHelper = LocationHelper(context)
-    private val calculator: SunCalculator?
+    private val sunCalculator: SunCalculator?
     private val paperRepository: PaperRepository
     private val allPaper: LiveData<List<Paper>>
 
@@ -36,12 +37,10 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
     private val scope = CoroutineScope(coroutineContext)
 
     private var currentWallpaper: Drawable? = null
-    private var dayWallpaper: Bitmap? = null
-    private var nightWallpaper: Bitmap? = null
 
     init {
         val location = locationHelper.getLocation()
-        calculator = location?.let { SunCalculator(location) }
+        sunCalculator = location?.let { SunCalculator(location) }
 
         val paperDao = PaperDatabase.getDatabase(context).paperDao()
         paperRepository = PaperRepository(paperDao)
@@ -54,16 +53,23 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
         parentJob.cancel()
     }
 
-    fun insert(paper: Paper) = scope.launch(Dispatchers.IO) {
-        paperRepository.insert(paper)
-    }
-
     // get and apply the wallpaper stored for the specified PaperTime
     // if no wallpaper was saved, do nothing
+    fun apply() {
+        sunCalculator?.let {
+            val currentPaperTime = sunCalculator.getCurrentPaperTime()
+            runBlocking {
+                getPaperForPaperTimeAsync(currentPaperTime).await()?.let { img -> set(img) }
+            }
+            scheduleNextUpdate(currentPaperTime)
+        }
+    }
+
     fun apply(time: PaperTime) {
         runBlocking {
-            getPaperForTimeAsync(time).await()?.let { img -> set(img) }
+            getPaperForPaperTimeAsync(time).await()?.let { img -> set(img) }
         }
+        sunCalculator?.let { scheduleNextUpdate(sunCalculator.getCurrentPaperTime()) }
     }
 
     // set the bitmap as current wallpaper
@@ -80,7 +86,7 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
         return false
     }
 
-    fun reset(): Boolean {
+    private fun reset(): Boolean {
         val wp = currentWallpaper
         wp?.let { return set(Util.drawableToBitmap(wp)) }
         return false
@@ -99,13 +105,17 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
         return null
     }
 
+    fun insert(paper: Paper) = scope.launch(Dispatchers.IO) {
+        paperRepository.insert(paper)
+    }
+
     // add the wallpaper for given time
     fun addPaperForTime(time: Calendar): Bitmap? {
         wallpaperManager.drawable?.let {
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
             val paper = Paper(time, 0)
 
-            GlobalScope.launch {
+            scope.launch(Dispatchers.IO) {
                 // save wallpaper to internal storage
                 val file = File(context.filesDir, paper.filename)
                 val os = FileOutputStream(file)
@@ -124,13 +134,13 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
 
     // add the wallpaper for given PaperTime
     fun addPaperForPaperTime(time: PaperTime): Bitmap? {
-        if (wallpaperManager.drawable != null && calculator != null){
+        if (wallpaperManager.drawable != null && sunCalculator != null){
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            val paper = Paper(calculator.getByPaperTime(time), 0, time)
+            val paper = Paper(sunCalculator.getByPaperTime(time), 0, time)
 
-            GlobalScope.launch {
+            scope.launch(Dispatchers.IO) {
                 // save wallpaper to internal storage
-                val file = File(context.filesDir, getFilenameForTime(time))
+                val file = File(context.filesDir, paper.filename)
                 val os = FileOutputStream(file)
                 wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
                 os.close()
@@ -145,24 +155,29 @@ class PaperManager(private val context: Application) : AndroidViewModel(context)
         return null
     }
 
-    fun getPaperForTimeAsync(time: PaperTime): Deferred<Bitmap?> {
-        return GlobalScope.async {
-            val file = File(context.filesDir, getFilenameForTime(time))
-            if (file.exists()) {
-                val bmp = BitmapFactory.decodeFile(file.absolutePath)
-                when (time) {
-                    PaperTime.SUNRISE -> dayWallpaper = bmp
-                    PaperTime.SUNSET -> nightWallpaper = bmp
+    fun getPaperForTimeAsync(time: Calendar): Deferred<Bitmap?> {
+        return scope.async(Dispatchers.IO) {
+            val paper = paperRepository.getPaperForTime(time).value
+            paper?.let {
+                val file = File(context.filesDir, paper.filename)
+                if (file.exists()) {
+                    return@async BitmapFactory.decodeFile(file.absolutePath)
                 }
-                bmp
-            } else null
+            }
+            null
         }
     }
 
-    private fun getFilenameForTime(time: PaperTime): String? {
-        return when(time) {
-            PaperTime.SUNRISE -> FILENAME_WALLPAPER_DAY
-            PaperTime.SUNSET -> FILENAME_WALLPAPER_NIGHT
+    fun getPaperForPaperTimeAsync(time: PaperTime): Deferred<Bitmap?> {
+        return scope.async(Dispatchers.IO) {
+            val paper = paperRepository.getPaperForPaperTime(time)
+            paper?.let {
+                val file = File(context.filesDir, paper.filename)
+                if (file.exists()) {
+                    return@async BitmapFactory.decodeFile(file.absolutePath)
+                }
+            }
+            null
         }
     }
 
