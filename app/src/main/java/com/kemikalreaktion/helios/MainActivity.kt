@@ -12,6 +12,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
 import android.widget.ImageView
+import android.widget.TextView
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
@@ -40,14 +41,17 @@ class MainActivity : AppCompatActivity() {
         locationHelper = LocationHelper(this)
 
         // load last saved wallpaper
-        val viewDay = findViewById<ImageView>(R.id.preview_day)
-        val viewNight = findViewById<ImageView>(R.id.preview_night)
         runBlocking {
             val bmpDay = paperViewModel.getPaperForPaperTimeAsync(PaperTime.SUNRISE).await()
             val bmpNight = paperViewModel.getPaperForPaperTimeAsync(PaperTime.SUNSET).await()
-            bmpDay?.let { viewDay.setImageBitmap(bmpDay) }
-            bmpNight?.let { viewNight.setImageBitmap(bmpNight) }
+            bmpDay?.let { findViewById<ImageView>(R.id.preview_day).setImageBitmap(bmpDay) }
+            bmpNight?.let { findViewById<ImageView>(R.id.preview_night).setImageBitmap(bmpNight) }
         }
+
+        findViewById<TextView>(R.id.text_sunrise_time).text =
+            getString(R.string.label_sunrise_time, paperViewModel.sunCalculator?.getSunrise()?.time)
+        findViewById<TextView>(R.id.text_sunset_time).text =
+            getString(R.string.label_sunset_time, paperViewModel.sunCalculator?.getSunset()?.time)
     }
 
     override fun onStart() {

@@ -27,7 +27,7 @@ import kotlin.coroutines.CoroutineContext
 class PaperViewModel(private val context: Context) : ViewModel() {
     private val wallpaperManager = context.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
     private val locationHelper = LocationHelper(context)
-    private val sunCalculator: SunCalculator?
+    val sunCalculator: SunCalculator?
     private val paperRepository: PaperRepository
     private val allPaper: LiveData<List<Paper>>
 

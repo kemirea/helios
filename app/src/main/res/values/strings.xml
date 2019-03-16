@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Solar Wallpaper</string>
+
+    <string name="label_sunrise_time">Sunrise time: %1$s</string>
+    <string name="label_sunset_time">Sunset time: %1$s</string>
 </resources>

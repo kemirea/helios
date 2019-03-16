@@ -16,15 +16,11 @@ class SunCalculator(location: Location) {
         com.luckycatlabs.sunrisesunset.dto.Location(location.latitude, location.longitude), TimeZone.getDefault())
 
     fun getSunrise(): Calendar {
-        val sunrise = calculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
-        Log.v(DEBUG_TAG, "Sunrise time: ${sunrise.time}")
-        return sunrise
+        return calculator.getOfficialSunriseCalendarForDate(Calendar.getInstance())
     }
 
     fun getSunset(): Calendar {
-        val sunset = calculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
-        Log.v(DEBUG_TAG, "Sunrise time: ${sunset.time}")
-        return sunset
+        return calculator.getOfficialSunsetCalendarForDate(Calendar.getInstance())
     }
 
     fun getByPaperTime(time: PaperTime): Calendar {
