@@ -10,10 +10,10 @@ import android.content.Intent
 class WallpaperBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_APPLY_WALLPAPER) {
-            val index = intent.getIntExtra(EXTRA_PAPER_TIME, PaperTime.DAY.ordinal)
+            val index = intent.getIntExtra(EXTRA_PAPER_TIME, PaperTime.SUNRISE.ordinal)
             val time = PaperTime.values()[index]
-            WallpaperHelper(context).apply(time)
-            WallpaperHelper(context).scheduleNextUpdate(time)
+            PaperManager(context).apply(time)
+            PaperManager(context).scheduleNextUpdate(time)
         }
     }
 }

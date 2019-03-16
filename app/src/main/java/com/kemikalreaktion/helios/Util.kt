@@ -20,8 +20,8 @@ const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
 // STOP
 // IT'S PAPERTIME
 enum class PaperTime {
-    DAY,
-    NIGHT
+    SUNRISE,
+    SUNSET
 }
 
 object Util {

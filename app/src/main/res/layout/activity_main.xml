@@ -107,4 +107,22 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/chooser_layout"
             android:onClick="onApplyClicked"/>
+
+    <TextView
+            android:id="@+id/text_sunrise_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="sunrise"
+            android:layout_marginTop="50dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/button_apply" />
+    <TextView
+            android:id="@+id/text_sunset_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_sunrise_time"
+            android:text="sunset"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

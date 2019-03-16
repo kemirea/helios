@@ -5,8 +5,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.*
 
-@Entity(tableName = "paper_table")
-data class Paper(@PrimaryKey @ColumnInfo(name = "time") val time: Calendar,
+@Entity(tableName = "paper_table", primaryKeys = arrayOf("time", "paper_time"))
+data class Paper(@PrimaryKey val time: Calendar,
                  val filename: String,
                  val which: Int,
                  @ColumnInfo(name = "paper_time") val paperTime: PaperTime?) : Comparable<Paper> {

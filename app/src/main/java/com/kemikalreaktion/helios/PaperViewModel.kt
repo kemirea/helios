@@ -1,6 +1,7 @@
 package com.kemikalreaktion.helios
 
 import android.app.AlarmManager
+import android.app.Application
 import android.app.PendingIntent
 import android.app.WallpaperManager
 import android.content.Context
@@ -9,27 +10,58 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 
 import java.io.IOException
+import kotlin.coroutines.CoroutineContext
 
 private const val FILENAME_WALLPAPER_DAY = "wallpaper_day.png"
 private const val FILENAME_WALLPAPER_NIGHT = "wallpaper_night.png"
 
-class WallpaperHelper(private val mContext: Context) {
-    private val wallpaperManager: WallpaperManager =
-        mContext.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
+class PaperManager(private val context: Application) : AndroidViewModel(context) {
+    private val wallpaperManager = context.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
+    private val locationHelper = LocationHelper(context)
+    private val calculator: SunCalculator?
+    private val paperRepository: PaperRepository
+    private val allPaper: LiveData<List<Paper>>
+
+    private var parentJob = Job()
+    private val coroutineContext: CoroutineContext
+        get() = parentJob + Dispatchers.Main
+    private val scope = CoroutineScope(coroutineContext)
+
     private var currentWallpaper: Drawable? = null
     private var dayWallpaper: Bitmap? = null
     private var nightWallpaper: Bitmap? = null
+
+    init {
+        val location = locationHelper.getLocation()
+        calculator = location?.let { SunCalculator(location) }
+
+        val paperDao = PaperDatabase.getDatabase(context).paperDao()
+        paperRepository = PaperRepository(paperDao)
+        allPaper = paperRepository.allPaper
+    }
+
+
+    override fun onCleared() {
+        super.onCleared()
+        parentJob.cancel()
+    }
+
+    fun insert(paper: Paper) = scope.launch(Dispatchers.IO) {
+        paperRepository.insert(paper)
+    }
 
     // get and apply the wallpaper stored for the specified PaperTime
     // if no wallpaper was saved, do nothing
     fun apply(time: PaperTime) {
         runBlocking {
-            getSavedWallpaperAsync(time).await()?.let { img -> set(img) }
+            getPaperForTimeAsync(time).await()?.let { img -> set(img) }
         }
     }
 
@@ -67,31 +99,40 @@ class WallpaperHelper(private val mContext: Context) {
     }
 
     // update the saved wallpaper for given PaperTime
-    fun updateWallpaperForTime(time: PaperTime): Bitmap? {
+    fun addPaperForTime(time: PaperTime): Bitmap? {
         wallpaperManager.drawable?.let {
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
             // save wallpaper to internal storage
             GlobalScope.launch {
-                val file = File(mContext.filesDir, getFilenameForTime(time))
+                val file = File(context.filesDir, getFilenameForTime(time))
                 val os = FileOutputStream(file)
                 wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
                 os.close()
             }
 
-            if (time == PaperTime.DAY) dayWallpaper = wallpaper else nightWallpaper = wallpaper
+            calculator?.let{
+                val paper = if(time == PaperTime.SUNRISE)
+                    Paper(calculator.getSunrise(), 0, time)
+                else
+                    Paper(calculator.getSunset(), 0, time)
+
+
+            }
+
+            if (time == PaperTime.SUNRISE) dayWallpaper = wallpaper else nightWallpaper = wallpaper
             return wallpaper
         }
         return null
     }
 
-    fun getSavedWallpaperAsync(time: PaperTime): Deferred<Bitmap?> {
+    fun getPaperForTimeAsync(time: PaperTime): Deferred<Bitmap?> {
         return GlobalScope.async {
-            val file = File(mContext.filesDir, getFilenameForTime(time))
+            val file = File(context.filesDir, getFilenameForTime(time))
             if (file.exists()) {
                 val bmp = BitmapFactory.decodeFile(file.absolutePath)
                 when (time) {
-                    PaperTime.DAY -> dayWallpaper = bmp
-                    PaperTime.NIGHT -> nightWallpaper = bmp
+                    PaperTime.SUNRISE -> dayWallpaper = bmp
+                    PaperTime.SUNSET -> nightWallpaper = bmp
                 }
                 bmp
             } else null
@@ -100,30 +141,30 @@ class WallpaperHelper(private val mContext: Context) {
 
     private fun getFilenameForTime(time: PaperTime): String? {
         return when(time) {
-            PaperTime.DAY -> FILENAME_WALLPAPER_DAY
-            PaperTime.NIGHT -> FILENAME_WALLPAPER_NIGHT
+            PaperTime.SUNRISE -> FILENAME_WALLPAPER_DAY
+            PaperTime.SUNSET -> FILENAME_WALLPAPER_NIGHT
         }
     }
 
     fun getIntentForTime(time: PaperTime): Intent {
-        return Intent(mContext, WallpaperBroadcastReceiver::class.java).let { intent ->
+        return Intent(context, WallpaperBroadcastReceiver::class.java).let { intent ->
             intent.action = ACTION_APPLY_WALLPAPER
             intent.putExtra(EXTRA_PAPER_TIME, time.ordinal)
         }
     }
 
     fun scheduleNextUpdate(time: PaperTime) {
-        LocationHelper(mContext).getLocation()?.let { location ->
+        LocationHelper(context).getLocation()?.let { location ->
             val calculator = SunCalculator(location)
-            val mAlarmManager: AlarmManager = mContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val mAlarmManager: AlarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-            if (time == PaperTime.DAY) {
-                val sunsetIntent = getIntentForTime(PaperTime.NIGHT).let { intent ->
-                    PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            if (time == PaperTime.SUNRISE) {
+                val sunsetIntent = getIntentForTime(PaperTime.SUNSET).let { intent ->
+                    PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
                 mAlarmManager.set(AlarmManager.RTC, calculator.getSunset().timeInMillis, sunsetIntent)
-            } else if (time == PaperTime.NIGHT) {
-                val sunriseIntent = getIntentForTime(PaperTime.DAY).let { intent ->
-                    PendingIntent.getBroadcast(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
+            } else if (time == PaperTime.SUNSET) {
+                val sunriseIntent = getIntentForTime(PaperTime.SUNRISE).let { intent ->
+                    PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT) }
                 mAlarmManager.set(AlarmManager.RTC, calculator.getSunrise().timeInMillis, sunriseIntent)
             }
         }

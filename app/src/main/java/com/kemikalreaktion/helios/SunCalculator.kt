@@ -30,9 +30,9 @@ class SunCalculator(location: Location) {
     fun getCurrentPaperTime(): PaperTime {
         val currentTime = Calendar.getInstance()
         return if (currentTime > getSunrise() && currentTime < getSunset()) {
-            PaperTime.DAY
+            PaperTime.SUNRISE
         } else {
-            PaperTime.NIGHT
+            PaperTime.SUNSET
         }
     }
 }

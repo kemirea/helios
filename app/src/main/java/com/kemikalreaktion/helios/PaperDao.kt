@@ -4,24 +4,16 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 
 @Dao
-class PaperDao {
+interface PaperDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(paper: Paper) {
-
-    }
+    fun insert(paper: Paper)
 
     @Delete
-    fun delete(paper: Paper) {
-
-    }
+    fun delete(paper: Paper)
 
     @Update
-    fun update(paper: Paper) {
-
-    }
+    fun update(paper: Paper)
 
     @Query("SELECT * from paper_table ORDER BY time ASC")
-    fun getAll(): List<Paper> {
-        return ArrayList()
-    }
+    fun getAll(): LiveData<List<Paper>>
 }
