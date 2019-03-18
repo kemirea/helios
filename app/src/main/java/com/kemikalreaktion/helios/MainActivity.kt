@@ -11,6 +11,7 @@ import android.view.View
 import android.content.Intent
 import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.coroutines.runBlocking
@@ -24,21 +25,38 @@ private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
 private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
 
 private val REQUIRED_PERMISSIONS = arrayOf(
+    // required to grab current background
     READ_EXTERNAL_STORAGE,
+    // required for sunrise/sunset time
     ACCESS_COARSE_LOCATION,
     ACCESS_FINE_LOCATION
 )
 
 class MainActivity : AppCompatActivity() {
     private lateinit var paperViewModel: PaperViewModel
-    private lateinit var locationHelper: LocationHelper
     private var hasPermissions = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         paperViewModel = PaperViewModel(application)
-        locationHelper = LocationHelper(this)
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        // TODO: proper permissions handling
+        // For now, this "just works"
+        for (permission in REQUIRED_PERMISSIONS) {
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                hasPermissions = false
+            }
+        }
+        if (!hasPermissions) requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         // load last saved wallpaper
         runBlocking {
@@ -54,27 +72,24 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.label_sunset_time, paperViewModel.sunCalculator?.getSunset()?.time)
     }
 
-    override fun onStart() {
-        super.onStart()
-        // TODO: proper permissions handling
-        // For now, this "just works"
-        for (permission in REQUIRED_PERMISSIONS) {
-            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                hasPermissions = false
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            var allPermissionsGranted = true
+            for (result in grantResults) {
+                if (result == PERMISSION_DENIED) allPermissionsGranted = false
+            }
+
+            if (allPermissionsGranted) {
+                // reinit PaperViewModel
+                paperViewModel = PaperViewModel(application)
+                hasPermissions = true
             }
         }
-        if (!hasPermissions) requestPermissions(REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
-    }
-
-    override fun onResume() {
-        super.onResume()
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         when(requestCode) {
-            REQUEST_CODE_PERMISSIONS -> {
-                if (resultCode == RESULT_OK) hasPermissions = true
-            }
             REQUEST_CODE_CHOOSE_IMAGE_DAY -> {
                 if (resultCode == RESULT_OK) {
                     val cropIntent = paperViewModel.getCropIntent(intent?.data!!)

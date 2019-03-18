@@ -1,7 +1,6 @@
 package com.kemikalreaktion.helios
 
 import android.app.AlarmManager
-import android.app.Application
 import android.app.PendingIntent
 import android.app.WallpaperManager
 import android.content.Context
@@ -10,7 +9,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.kemikalreaktion.helios.data.Paper
@@ -27,9 +25,9 @@ import kotlin.coroutines.CoroutineContext
 class PaperViewModel(private val context: Context) : ViewModel() {
     private val wallpaperManager = context.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
     private val locationHelper = LocationHelper(context)
-    val sunCalculator: SunCalculator?
     private val paperRepository: PaperRepository
     private val allPaper: LiveData<List<Paper>>
+    val sunCalculator: SunCalculator?
 
     private var parentJob = Job()
     private val coroutineContext: CoroutineContext
