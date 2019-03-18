@@ -60,8 +60,8 @@ class MainActivity : AppCompatActivity() {
 
         // load last saved wallpaper
         runBlocking {
-            val bmpDay = paperViewModel.getPaperForPaperTimeAsync(PaperTime.SUNRISE).await()
-            val bmpNight = paperViewModel.getPaperForPaperTimeAsync(PaperTime.SUNSET).await()
+            val bmpDay = paperViewModel.getBitmapForPaperTimeAsync(PaperTime.SUNRISE).await()
+            val bmpNight = paperViewModel.getBitmapForPaperTimeAsync(PaperTime.SUNSET).await()
             bmpDay?.let { findViewById<ImageView>(R.id.preview_day).setImageBitmap(bmpDay) }
             bmpNight?.let { findViewById<ImageView>(R.id.preview_night).setImageBitmap(bmpNight) }
         }

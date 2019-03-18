@@ -20,7 +20,7 @@ interface PaperDao {
     fun getAll(): LiveData<List<Paper>>
 
     @Query("SELECT * from paper_table where paper_time = :time")
-    fun getPaperByTime(time: Calendar): LiveData<Paper>
+    fun getPaperByTime(time: Calendar): Paper?
 
     @Query("SELECT * from paper_table where paper_time = :paperTime")
     fun getPaperByPaperTime(paperTime: PaperTime): Paper?

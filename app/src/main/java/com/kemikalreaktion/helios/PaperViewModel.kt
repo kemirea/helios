@@ -3,6 +3,8 @@ package com.kemikalreaktion.helios
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.app.WallpaperManager
+import android.app.WallpaperManager.FLAG_LOCK
+import android.app.WallpaperManager.FLAG_SYSTEM
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -45,48 +47,48 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         allPaper = paperRepository.allPaper
     }
 
-
     override fun onCleared() {
         super.onCleared()
         parentJob.cancel()
     }
 
-    // get and apply the wallpaper stored for the specified PaperTime
+    // get and setForPaperTime the wallpaper stored for the specified PaperTime
     // if no wallpaper was saved, do nothing
     fun apply() {
         sunCalculator?.let {
             val currentPaperTime = sunCalculator.getCurrentPaperTime()
-            runBlocking {
-                getPaperForPaperTimeAsync(currentPaperTime).await()?.let { img -> set(img) }
-            }
+            setForPaperTime(currentPaperTime)
             scheduleNextUpdate(currentPaperTime)
         }
     }
 
-    fun apply(time: PaperTime) {
-        runBlocking {
-            getPaperForPaperTimeAsync(time).await()?.let { img -> set(img) }
+    // get bitmap for current PaperTime and set as current wallpaper
+    fun setForPaperTime(time: PaperTime) {
+        scope.launch(Dispatchers.IO) {
+            val paper = paperRepository.getPaperForPaperTime(time)
+            paper?.let {
+                getBitmapForPaperAsync(paper)?.let { bitmap ->
+                    try {
+                        wallpaperManager.setBitmap(bitmap, null, true, paper.which)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                }
+            }
         }
-        sunCalculator?.let { scheduleNextUpdate(sunCalculator.getCurrentPaperTime()) }
     }
 
-    // set the bitmap as current wallpaper
-    private fun set(bitmap: Bitmap?): Boolean {
-        bitmap?.let {
+    private fun reset(): Boolean {
+        val wp = currentWallpaper
+        wp?.let {
             try {
-                wallpaperManager.setBitmap(bitmap)
+                wallpaperManager.setBitmap(Util.drawableToBitmap(wp), null, true, FLAG_SYSTEM or FLAG_LOCK)
             } catch (e: IOException) {
                 e.printStackTrace()
                 return false
             }
             return true
         }
-        return false
-    }
-
-    private fun reset(): Boolean {
-        val wp = currentWallpaper
-        wp?.let { return set(Util.drawableToBitmap(wp)) }
         return false
     }
 
@@ -103,15 +105,12 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return null
     }
 
-    fun insert(paper: Paper) = scope.launch(Dispatchers.IO) {
-        paperRepository.insert(paper)
-    }
-
     // add the wallpaper for given time
     fun addPaperForTime(time: Calendar): Bitmap? {
         wallpaperManager.drawable?.let {
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            val paper = Paper(time, 0)
+            // TODO; we should take the result of the crop intent for the which argument
+            val paper = Paper(time, FLAG_SYSTEM or FLAG_LOCK)
 
             scope.launch(Dispatchers.IO) {
                 // save wallpaper to internal storage
@@ -134,7 +133,8 @@ class PaperViewModel(private val context: Context) : ViewModel() {
     fun addPaperForPaperTime(time: PaperTime): Bitmap? {
         if (wallpaperManager.drawable != null && sunCalculator != null){
             val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            val paper = Paper(sunCalculator.getByPaperTime(time), 0, time)
+            // TODO; we should take the result of the crop intent for the which argument
+            val paper = Paper(sunCalculator.getByPaperTime(time), FLAG_SYSTEM or FLAG_LOCK, time)
 
             scope.launch(Dispatchers.IO) {
                 // save wallpaper to internal storage
@@ -153,29 +153,25 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return null
     }
 
-    fun getPaperForTimeAsync(time: Calendar): Deferred<Bitmap?> {
-        return scope.async(Dispatchers.IO) {
-            val paper = paperRepository.getPaperForTime(time).value
-            paper?.let {
-                val file = File(context.filesDir, paper.filename)
-                if (file.exists()) {
-                    return@async BitmapFactory.decodeFile(file.absolutePath)
-                }
+    private fun getBitmapForPaperAsync(paper: Paper?): Bitmap? {
+        paper?.let{
+            val file = File(context.filesDir, paper.filename)
+            if (file.exists()) {
+                return BitmapFactory.decodeFile(file.absolutePath)
             }
-            null
+        }
+        return null
+    }
+
+    fun getBitmapForTimeAsync(time: Calendar): Deferred<Bitmap?> {
+        return scope.async(Dispatchers.IO) {
+            getBitmapForPaperAsync(paperRepository.getPaperForTime(time))
         }
     }
 
-    fun getPaperForPaperTimeAsync(time: PaperTime): Deferred<Bitmap?> {
+    fun getBitmapForPaperTimeAsync(time: PaperTime): Deferred<Bitmap?> {
         return scope.async(Dispatchers.IO) {
-            val paper = paperRepository.getPaperForPaperTime(time)
-            paper?.let {
-                val file = File(context.filesDir, paper.filename)
-                if (file.exists()) {
-                    return@async BitmapFactory.decodeFile(file.absolutePath)
-                }
-            }
-            null
+            getBitmapForPaperAsync(paperRepository.getPaperForPaperTime(time))
         }
     }
 
