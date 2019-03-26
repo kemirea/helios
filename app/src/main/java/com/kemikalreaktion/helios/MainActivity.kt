@@ -67,11 +67,13 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val df = SimpleDateFormat("HH:mm:ss z")
+        val df = SimpleDateFormat("HH:mm:ss z", Locale.US)
+        val sunrise = paperViewModel.sunCalculator?.getSunrise()?.time
+        val sunset = paperViewModel.sunCalculator?.getSunrise()?.time
         findViewById<TextView>(R.id.text_sunrise_time).text =
-            getString(R.string.label_sunrise_time, df.format(paperViewModel.sunCalculator?.getSunrise()?.time))
+            getString(R.string.label_sunrise_time, if (sunrise != null) df.format(sunrise) else "")
         findViewById<TextView>(R.id.text_sunset_time).text =
-            getString(R.string.label_sunset_time, df.format(paperViewModel.sunCalculator?.getSunset()?.time))
+            getString(R.string.label_sunset_time, if (sunset != null) df.format(sunset) else "")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
