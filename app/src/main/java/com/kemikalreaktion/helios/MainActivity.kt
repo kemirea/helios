@@ -14,15 +14,13 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.viewpager.widget.ViewPager
 import kotlinx.coroutines.runBlocking
 import java.util.*
 
 private const val REQUEST_CODE_PERMISSIONS = 0
-// TODO: figure out a better way to track the current wallpaper being changed
-private const val REQUEST_CODE_CHOOSE_IMAGE_DAY = 1
-private const val REQUEST_CODE_CHOOSE_IMAGE_NIGHT = 2
-private const val REQUEST_CODE_CROP_IMAGE_DAY = 3
-private const val REQUEST_CODE_CROP_IMAGE_NIGHT = 4
+private const val REQUEST_CODE_CHOOSE_IMAGE = 1
+private const val REQUEST_CODE_CROP_IMAGE = 2
 
 private val REQUIRED_PERMISSIONS = arrayOf(
     // required to grab current background
@@ -36,10 +34,19 @@ class MainActivity : AppCompatActivity() {
     private lateinit var paperViewModel: PaperViewModel
     private var hasPermissions = true
 
+    private lateinit var mPager: ViewPager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         paperViewModel = PaperViewModel(application)
+
+        mPager = findViewById(R.id.viewpager)
+        val pagerAdapter = PaperPagerAdapter(supportFragmentManager, paperViewModel)
+        mPager.adapter = pagerAdapter
+        paperViewModel.allPaper.observe(this, androidx.lifecycle.Observer {
+            pagerAdapter.notifyDataSetChanged()
+        })
     }
 
     override fun onStart() {
@@ -57,14 +64,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-
-        // load last saved wallpaper
-        runBlocking {
-            val bmpDay = paperViewModel.getBitmapForPaperTimeAsync(PaperTime.SUNRISE).await()
-            val bmpNight = paperViewModel.getBitmapForPaperTimeAsync(PaperTime.SUNSET).await()
-            bmpDay?.let { findViewById<ImageView>(R.id.preview_day).setImageBitmap(bmpDay) }
-            bmpNight?.let { findViewById<ImageView>(R.id.preview_night).setImageBitmap(bmpNight) }
-        }
 
         findViewById<TextView>(R.id.text_sunrise_time).text =
             getString(R.string.label_sunrise_time, paperViewModel.sunCalculator?.getSunrise()?.time)
@@ -90,28 +89,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         when(requestCode) {
-            REQUEST_CODE_CHOOSE_IMAGE_DAY -> {
+            REQUEST_CODE_CHOOSE_IMAGE -> {
                 if (resultCode == RESULT_OK) {
                     val cropIntent = paperViewModel.getCropIntent(intent?.data!!)
-                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE_DAY) }
+                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE) }
                 }
             }
-            REQUEST_CODE_CHOOSE_IMAGE_NIGHT -> {
-                if (resultCode == RESULT_OK) {
-                    val cropIntent = paperViewModel.getCropIntent(intent?.data!!)
-                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE_NIGHT) }
-                }
-            }
-            REQUEST_CODE_CROP_IMAGE_DAY -> {
+            REQUEST_CODE_CROP_IMAGE -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
-                    val view = findViewById<ImageView>(R.id.preview_day)
-                    paperViewModel.addPaperForPaperTime(PaperTime.SUNRISE)?.let { bmp -> view.setImageBitmap(bmp) }
-                }
-            }
-            REQUEST_CODE_CROP_IMAGE_NIGHT -> {
-                if (resultCode == RESULT_OK && hasPermissions) {
-                    val view = findViewById<ImageView>(R.id.preview_night)
-                    paperViewModel.addPaperForPaperTime(PaperTime.SUNSET)?.let { bmp -> view.setImageBitmap(bmp) }
+                    // TODO: handle adding new Paper
                 }
             }
         }
@@ -119,17 +105,11 @@ class MainActivity : AppCompatActivity() {
 
     fun onChooseClicked(view: View) {
         when(view.id) {
-            R.id.button_choose_day -> {
+            R.id.button_choose -> {
                 val intent = Intent(ACTION_PICK)
                 intent.type = "image/*"
                 intent.action = Intent.ACTION_GET_CONTENT
-                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_DAY)
-            }
-            R.id.button_choose_night -> {
-                val intent = Intent(ACTION_PICK)
-                intent.type = "image/*"
-                intent.action = Intent.ACTION_GET_CONTENT
-                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE_NIGHT)
+                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE)
             }
         }
     }
@@ -137,25 +117,5 @@ class MainActivity : AppCompatActivity() {
     // TODO: mode this logic into PaperViewModel
     fun onApplyClicked(view: View) {
         paperViewModel.apply()
-    }
-
-    // TODO: once alarms are confirmed working, we should update this to immediately preview/apply the selected wallpaper
-    fun onTestClicked(view: View) {
-        when(view.id) {
-            R.id.button_test_day -> {
-                // Test intent for setting day wallpaper. Intent is sent 5 seconds later.
-                val sunriseIntent = paperViewModel.getIntentForTime(PaperTime.SUNRISE).let { intent ->
-                    PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
-                val mAlarmManager: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                mAlarmManager.set(AlarmManager.RTC, Calendar.getInstance().timeInMillis+5000, sunriseIntent)
-            }
-            R.id.button_test_night -> {
-                // Test intent for setting night wallpaper. Intent is sent 5 seconds later.
-                val sunriseIntent = paperViewModel.getIntentForTime(PaperTime.SUNSET).let { intent ->
-                    PendingIntent.getBroadcast(this, 0, intent, FLAG_UPDATE_CURRENT) }
-                val mAlarmManager: AlarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                mAlarmManager.set(AlarmManager.RTC, Calendar.getInstance().timeInMillis+5000, sunriseIntent)
-            }
-        }
     }
 }

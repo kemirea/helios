@@ -8,11 +8,11 @@ import android.app.WallpaperManager.FLAG_SYSTEM
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import com.kemikalreaktion.helios.Util.getBitmapForPaper
 import com.kemikalreaktion.helios.data.Paper
 import com.kemikalreaktion.helios.data.PaperDatabase
 import com.kemikalreaktion.helios.data.PaperRepository
@@ -28,7 +28,7 @@ class PaperViewModel(private val context: Context) : ViewModel() {
     private val wallpaperManager = context.getSystemService(Context.WALLPAPER_SERVICE) as WallpaperManager
     private val locationHelper = LocationHelper(context)
     private val paperRepository: PaperRepository
-    private val allPaper: LiveData<List<Paper>>
+    val allPaper: LiveData<List<Paper>>
     val sunCalculator: SunCalculator?
 
     private var parentJob = Job()
@@ -67,7 +67,7 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         scope.launch(Dispatchers.IO) {
             val paper = paperRepository.getPaperForPaperTime(time)
             paper?.let {
-                getBitmapForPaperAsync(paper)?.let { bitmap ->
+                getBitmapForPaper(context, paper)?.let { bitmap ->
                     try {
                         wallpaperManager.setBitmap(bitmap, null, true, paper.which)
                     } catch (e: IOException) {
@@ -153,25 +153,15 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return null
     }
 
-    private fun getBitmapForPaperAsync(paper: Paper?): Bitmap? {
-        paper?.let{
-            val file = File(context.filesDir, paper.filename)
-            if (file.exists()) {
-                return BitmapFactory.decodeFile(file.absolutePath)
-            }
-        }
-        return null
-    }
-
     fun getBitmapForTimeAsync(time: Calendar): Deferred<Bitmap?> {
         return scope.async(Dispatchers.IO) {
-            getBitmapForPaperAsync(paperRepository.getPaperForTime(time))
+            getBitmapForPaper(context, paperRepository.getPaperForTime(time))
         }
     }
 
     fun getBitmapForPaperTimeAsync(time: PaperTime): Deferred<Bitmap?> {
         return scope.async(Dispatchers.IO) {
-            getBitmapForPaperAsync(paperRepository.getPaperForPaperTime(time))
+            getBitmapForPaper(context, paperRepository.getPaperForPaperTime(time))
         }
     }
 
