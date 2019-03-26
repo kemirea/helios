@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Solar Wallpaper</string>
+    <string name="app_name">Helios</string>
 
     <string name="label_sunrise_time">Sunrise time: %1$s</string>
     <string name="label_sunset_time">Sunset time: %1$s</string>
-    
+
     <string-array name="paper_time_option_entries">
         <item>Sunrise</item>
         <item>Sunset</item>

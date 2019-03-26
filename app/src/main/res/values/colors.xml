@@ -8,6 +8,7 @@
     <color name="colorAccentLight">#8e0038</color>
     <color name="textColorPrimary">#000000</color>
     <color name="textColorSecondary">#ffffff</color>
+    <color name="background">#777777</color>
 
     <color name="empty_background">#DDDDDD</color>
 </resources>

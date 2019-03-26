@@ -29,9 +29,16 @@
             android:layout_marginBottom="@dimen/standard_margin"
             app:layout_constraintStart_toStartOf="@+id/wallpaper"
             app:layout_constraintEnd_toEndOf="@+id/wallpaper"
-            app:layout_constraintBottom_toTopOf="@+id/spinner_time"
+            app:layout_constraintBottom_toTopOf="@+id/spinner_time_label"
             android:onClick="onChooseClicked"/>
 
+    <TextView
+            android:id="@+id/spinner_time_label"
+            android:text="Trigger time:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/spinner_time"
+            app:layout_constraintBottom_toTopOf="@id/spinner_time"/>
     <Spinner
             android:id="@+id/spinner_time"
             android:layout_width="0dp"
