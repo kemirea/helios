@@ -16,6 +16,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.viewpager.widget.ViewPager
 import kotlinx.coroutines.runBlocking
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 
 private const val REQUEST_CODE_PERMISSIONS = 0
@@ -65,10 +67,11 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        val df = SimpleDateFormat("HH:mm:ss z")
         findViewById<TextView>(R.id.text_sunrise_time).text =
-            getString(R.string.label_sunrise_time, paperViewModel.sunCalculator?.getSunrise()?.time)
+            getString(R.string.label_sunrise_time, df.format(paperViewModel.sunCalculator?.getSunrise()?.time))
         findViewById<TextView>(R.id.text_sunset_time).text =
-            getString(R.string.label_sunset_time, paperViewModel.sunCalculator?.getSunset()?.time)
+            getString(R.string.label_sunset_time, df.format(paperViewModel.sunCalculator?.getSunset()?.time))
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
