@@ -1,10 +1,6 @@
 package com.kemikalreaktion.helios
 
 import android.Manifest.permission.*
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -12,11 +8,10 @@ import android.content.Intent
 import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_DENIED
-import android.widget.ImageView
+import android.util.Log
+import android.widget.Spinner
 import android.widget.TextView
 import androidx.viewpager.widget.ViewPager
-import kotlinx.coroutines.runBlocking
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,16 +31,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var paperViewModel: PaperViewModel
     private var hasPermissions = true
 
-    private lateinit var mPager: ViewPager
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         paperViewModel = PaperViewModel(application)
 
-        mPager = findViewById(R.id.viewpager)
         val pagerAdapter = PaperPagerAdapter(supportFragmentManager, paperViewModel)
-        mPager.adapter = pagerAdapter
+        findViewById<ViewPager>(R.id.viewpager).adapter = pagerAdapter
         paperViewModel.allPaper.observe(this, androidx.lifecycle.Observer {
             pagerAdapter.notifyDataSetChanged()
         })
@@ -69,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
         val df = SimpleDateFormat("HH:mm:ss z", Locale.US)
         val sunrise = paperViewModel.sunCalculator?.getSunrise()?.time
-        val sunset = paperViewModel.sunCalculator?.getSunrise()?.time
+        val sunset = paperViewModel.sunCalculator?.getSunset()?.time
         findViewById<TextView>(R.id.text_sunrise_time).text =
             getString(R.string.label_sunrise_time, if (sunrise != null) df.format(sunrise) else "")
         findViewById<TextView>(R.id.text_sunset_time).text =
@@ -96,13 +88,16 @@ class MainActivity : AppCompatActivity() {
         when(requestCode) {
             REQUEST_CODE_CHOOSE_IMAGE -> {
                 if (resultCode == RESULT_OK) {
-                    val cropIntent = paperViewModel.getCropIntent(intent?.data!!)
-                    cropIntent?.let { startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE) }
+                    paperViewModel.getCropIntent(intent?.data!!)?.let { cropIntent ->
+                        startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE)
+                    }
                 }
             }
             REQUEST_CODE_CROP_IMAGE -> {
                 if (resultCode == RESULT_OK && hasPermissions) {
-                    // TODO: handle adding new Paper
+                    Log.v(DEBUG_TAG, "selected item position=${findViewById<Spinner>(R.id.spinner_time).selectedItemPosition}")
+                    val paperTime = PaperTime.values()[findViewById<Spinner>(R.id.spinner_time).selectedItemPosition]
+                    paperViewModel.addOrUpdatePaper(findViewById<ViewPager>(R.id.viewpager).currentItem, paperTime)
                 }
             }
         }

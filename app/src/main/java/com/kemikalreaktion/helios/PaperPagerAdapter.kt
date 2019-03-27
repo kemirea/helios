@@ -7,18 +7,26 @@ import androidx.fragment.app.FragmentPagerAdapter
 /**
  * PagerAdapter for displaying Papers
  */
+private const val MINIMUM_PAGE_COUNT = 1
+
 class PaperPagerAdapter(fragmentManager: FragmentManager, private val paperViewModel: PaperViewModel)
     : FragmentPagerAdapter(fragmentManager) {
 
     // Returns total number of pages
     override fun getCount(): Int {
-        return paperViewModel.allPaper.value?.size ?: 0
+        paperViewModel.allPaper.value?.size?.let { count ->
+            return count + MINIMUM_PAGE_COUNT
+        }
+        return MINIMUM_PAGE_COUNT
     }
 
     // Returns the fragment to display for that page
     override fun getItem(position: Int): Fragment {
         val fragment = PaperViewFragment()
-        fragment.setPaper(paperViewModel.allPaper.value?.get(position))
+        val count = paperViewModel.allPaper.value?.size
+        if (count != null && position < count) {
+            fragment.setPaper(paperViewModel.allPaper.value?.get(position))
+        }
         return fragment
     }
 

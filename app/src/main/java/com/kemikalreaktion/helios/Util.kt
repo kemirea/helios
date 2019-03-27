@@ -24,7 +24,8 @@ const val EXTRA_PAPER_TIME = "com.kemikalreaktion.helios.EXTRA_PAPER_TIME"
 // IT'S PAPERTIME
 enum class PaperTime {
     SUNRISE,
-    SUNSET
+    SUNSET,
+    CUSTOM
 }
 
 object Util {

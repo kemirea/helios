@@ -27,6 +27,7 @@ class SunCalculator(location: Location) {
         return when(time) {
             PaperTime.SUNRISE -> getSunrise()
             PaperTime.SUNSET -> getSunset()
+            PaperTime.CUSTOM -> Calendar.getInstance()
         }
     }
 
