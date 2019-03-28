@@ -10,7 +10,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import com.kemikalreaktion.helios.Util.getBitmapForPaper
@@ -151,32 +150,24 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return null
     }
 
-    fun addOrUpdatePaper(id: Int, paperTime: PaperTime) {
-        scope.launch(Dispatchers.IO) {
-            sunCalculator?.let {
-                var paperId = id
-                if (paperTime != PaperTime.CUSTOM) {
-                    paperRepository.getPaperForPaperTime(paperTime)?.let { paper ->
-                        // use existing id if we already have an entry for that PaperTime
-                        paperId = paper.id
-                    }
-                }
-                val newPaper = Paper(paperId, sunCalculator.getByPaperTime(paperTime),
-                        FLAG_SYSTEM or FLAG_LOCK, paperTime)
-                wallpaperManager.drawable?.let { drawable ->
-                    // save wallpaper to internal storage
-                    val file = File(context.filesDir, newPaper.filename)
-                    val os = FileOutputStream(file)
-                    Util.drawableToBitmap(drawable).compress(Bitmap.CompressFormat.PNG, 100, os)
-                    os.close()
+    fun addOrUpdatePaper(paper: Paper): Bitmap? {
+        var wallpaper: Bitmap? = null
+        wallpaperManager.drawable?.let { drawable ->
+            wallpaper = Util.drawableToBitmap(drawable)
+            scope.launch(Dispatchers.IO) {
+                // save wallpaper to internal storage
+                val file = File(context.filesDir, paper.filename)
+                val os = FileOutputStream(file)
+                wallpaper?.compress(Bitmap.CompressFormat.PNG, 100, os)
+                os.close()
 
-                    // add paper object to repository
-                    paperRepository.insert(newPaper)
-                }
+                // add paper object to repository
+                paperRepository.insert(paper)
             }
         }
 
         reset()
+        return wallpaper
     }
 
     fun getBitmapForTimeAsync(time: Calendar): Deferred<Bitmap?> {

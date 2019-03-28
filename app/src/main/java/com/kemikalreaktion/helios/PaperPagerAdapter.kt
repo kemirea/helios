@@ -3,6 +3,7 @@ package com.kemikalreaktion.helios
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentPagerAdapter
+import com.kemikalreaktion.helios.data.Paper
 
 /**
  * PagerAdapter for displaying Papers
@@ -24,9 +25,14 @@ class PaperPagerAdapter(fragmentManager: FragmentManager, private val paperViewM
     override fun getItem(position: Int): Fragment {
         val fragment = PaperViewFragment()
         val count = paperViewModel.allPaper.value?.size
+        var paper = Paper(position)
         if (count != null && position < count) {
-            fragment.setPaper(paperViewModel.allPaper.value?.get(position))
+            paperViewModel.allPaper.value?.get(position)?.let { p ->
+                paper = p
+            }
         }
+        fragment.setPaper(paper)
+
         return fragment
     }
 

@@ -1,5 +1,6 @@
 package com.kemikalreaktion.helios
 
+import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -15,6 +16,18 @@ import java.io.File
  */
 
 const val DEBUG_TAG = "DEBUG_CAT"
+
+const val REQUEST_CODE_PERMISSIONS = 0
+const val REQUEST_CODE_CHOOSE_IMAGE = 1
+const val REQUEST_CODE_CROP_IMAGE = 2
+
+val REQUIRED_PERMISSIONS = arrayOf(
+    // required to grab current background
+    Manifest.permission.READ_EXTERNAL_STORAGE,
+    // required for sunrise/sunset time
+    Manifest.permission.ACCESS_COARSE_LOCATION,
+    Manifest.permission.ACCESS_FINE_LOCATION
+)
 
 // constants for intents
 const val ACTION_APPLY_WALLPAPER = "com.kemikalreaktion.helios.ACTION_APPLY_WALLPAPER"
