@@ -52,6 +52,7 @@ class PaperViewFragment() : Fragment() {
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 paper.paperTime = PaperTime.values()[position]
+                paperViewModel.updatePaper(paper)
             }
         }
 

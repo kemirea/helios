@@ -170,6 +170,15 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return wallpaper
     }
 
+    // Use this to only update the paper if the paper already exists in the repository
+    fun updatePaper(paper: Paper) {
+        scope.launch(Dispatchers.IO) {
+            paperRepository.getPaperById(paper.id)?.let {
+                paperRepository.insert(paper)
+            }
+        }
+    }
+
     fun getBitmapForTimeAsync(time: Calendar): Deferred<Bitmap?> {
         return scope.async(Dispatchers.IO) {
             getBitmapForPaper(context, paperRepository.getPaperForTime(time))

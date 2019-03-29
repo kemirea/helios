@@ -13,6 +13,8 @@ class PaperRepository(private val paperDao: PaperDao) {
         paperDao.insert(paper)
     }
 
+    fun getPaperById(id: Int) = paperDao.getPaperById(id)
+
     fun getPaperForTime(time: Calendar) = paperDao.getPaperByTime(time)
 
     fun getPaperForPaperTime(paperTime: PaperTime) = paperDao.getPaperByPaperTime(paperTime)

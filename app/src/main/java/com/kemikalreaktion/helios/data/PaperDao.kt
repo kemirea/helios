@@ -19,6 +19,9 @@ interface PaperDao {
     @Query("SELECT * from paper_table ORDER BY time ASC")
     fun getAll(): LiveData<List<Paper>>
 
+    @Query("SELECT * from paper_table where id = :id")
+    fun getPaperById(id: Int): Paper?
+
     @Query("SELECT * from paper_table where paper_time = :time")
     fun getPaperByTime(time: Calendar): Paper?
 
