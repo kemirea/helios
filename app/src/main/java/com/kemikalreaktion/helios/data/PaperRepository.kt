@@ -13,6 +13,11 @@ class PaperRepository(private val paperDao: PaperDao) {
         paperDao.insert(paper)
     }
 
+    @WorkerThread
+    suspend fun delete(paper: Paper) {
+        paperDao.delete(paper)
+    }
+
     fun getPaperById(id: Int) = paperDao.getPaperById(id)
 
     fun getPaperForTime(time: Calendar) = paperDao.getPaperByTime(time)

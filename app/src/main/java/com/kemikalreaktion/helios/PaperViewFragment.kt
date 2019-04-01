@@ -56,19 +56,21 @@ class PaperViewFragment() : Fragment() {
             }
         }
 
-        view.findViewById<Button>(R.id.button_choose).setOnClickListener { v ->
-            onChooseClicked(v)
-        }
+        view.findViewById<Button>(R.id.button_choose).setOnClickListener { v -> onButtonClicked(v) }
+        view.findViewById<Button>(R.id.button_delete).setOnClickListener { v -> onButtonClicked(v) }
         return view
     }
 
-    private fun onChooseClicked(view: View) {
+    private fun onButtonClicked(view: View) {
         when(view.id) {
             R.id.button_choose -> {
                 val intent = Intent(Intent.ACTION_PICK)
                 intent.type = "image/*"
                 intent.action = Intent.ACTION_GET_CONTENT
                 startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE)
+            }
+            R.id.button_delete -> {
+                paperViewModel.deletePaper(paper)
             }
         }
     }

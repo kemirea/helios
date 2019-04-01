@@ -21,7 +21,6 @@ import java.io.File
 import java.io.FileOutputStream
 
 import java.io.IOException
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 class PaperViewModel(private val context: Context) : ViewModel() {
@@ -103,53 +102,6 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         return null
     }
 
-    // add the wallpaper for given time
-    fun addPaperForTime(id: Int, time: Calendar): Bitmap? {
-        wallpaperManager.drawable?.let {
-            val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            // TODO; we should take the result of the crop intent for the which argument
-            val paper = Paper(id, time, FLAG_SYSTEM or FLAG_LOCK)
-
-            scope.launch(Dispatchers.IO) {
-                // save wallpaper to internal storage
-                val file = File(context.filesDir, paper.filename)
-                val os = FileOutputStream(file)
-                wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
-                os.close()
-
-                // add paper object to repository
-                paperRepository.insert(paper)
-            }
-
-            reset()
-            return wallpaper
-        }
-        return null
-    }
-
-    // add the wallpaper for given PaperTime
-    fun addPaperForPaperTime(id: Int, time: PaperTime): Bitmap? {
-        if (wallpaperManager.drawable != null && sunCalculator != null){
-            val wallpaper = Util.drawableToBitmap(wallpaperManager.drawable)
-            // TODO; we should take the result of the crop intent for the which argument
-            val paper = Paper(id, sunCalculator.getByPaperTime(time), FLAG_SYSTEM or FLAG_LOCK, time)
-
-            scope.launch(Dispatchers.IO) {
-                // save wallpaper to internal storage
-                val file = File(context.filesDir, paper.filename)
-                val os = FileOutputStream(file)
-                wallpaper.compress(Bitmap.CompressFormat.PNG, 100, os)
-                os.close()
-
-                // add paper object to repository
-                paperRepository.insert(paper)
-            }
-
-            return wallpaper
-        }
-        return null
-    }
-
     fun addOrUpdatePaper(paper: Paper): Bitmap? {
         var wallpaper: Bitmap? = null
         wallpaperManager.drawable?.let { drawable ->
@@ -179,15 +131,10 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun getBitmapForTimeAsync(time: Calendar): Deferred<Bitmap?> {
-        return scope.async(Dispatchers.IO) {
-            getBitmapForPaper(context, paperRepository.getPaperForTime(time))
-        }
-    }
-
-    fun getBitmapForPaperTimeAsync(time: PaperTime): Deferred<Bitmap?> {
-        return scope.async(Dispatchers.IO) {
-            getBitmapForPaper(context, paperRepository.getPaperForPaperTime(time))
+    fun deletePaper(paper: Paper) {
+        scope.launch(Dispatchers.IO) {
+            // TODO: make sure we delete the saved wallpaper
+            paperRepository.delete(paper)
         }
     }
 
