@@ -133,7 +133,8 @@ class PaperViewModel(private val context: Context) : ViewModel() {
 
     fun deletePaper(paper: Paper) {
         scope.launch(Dispatchers.IO) {
-            // TODO: make sure we delete the saved wallpaper
+            val file = File(context.filesDir, paper.filename)
+            file.delete()
             paperRepository.delete(paper)
         }
     }
