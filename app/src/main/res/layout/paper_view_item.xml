@@ -40,7 +40,8 @@
             android:layout_marginBottom="@dimen/standard_margin"
             app:layout_constraintStart_toStartOf="@+id/wallpaper"
             app:layout_constraintEnd_toEndOf="@+id/wallpaper"
-            app:layout_constraintBottom_toTopOf="@+id/spinner_time_label"/>
+            app:layout_constraintBottom_toTopOf="@+id/spinner_time_label"
+    android:onClick="onButtonClicked"/>
 
     <TextView
             android:id="@+id/spinner_time_label"

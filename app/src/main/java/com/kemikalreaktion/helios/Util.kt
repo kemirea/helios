@@ -42,16 +42,6 @@ enum class PaperTime {
 }
 
 object Util {
-    fun getBitmapForPaper(context: Context, paper: Paper?): Bitmap? {
-        paper?.let{
-            val file = File(context.filesDir, paper.filename)
-            if (file.exists()) {
-                return BitmapFactory.decodeFile(file.absolutePath)
-            }
-        }
-        return null
-    }
-
     fun drawableToBitmap(drawable: Drawable): Bitmap {
         val bmp: Bitmap
         if (drawable is BitmapDrawable) {

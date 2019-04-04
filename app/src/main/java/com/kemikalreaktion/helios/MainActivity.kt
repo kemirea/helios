@@ -1,23 +1,25 @@
 package com.kemikalreaktion.helios
 
-import android.Manifest.permission.*
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import android.content.Intent
-import android.content.Intent.ACTION_PICK
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_DENIED
 import android.util.Log
-import android.widget.Spinner
+import android.widget.ImageView
+import android.widget.LinearLayout.HORIZONTAL
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProviders
-import androidx.viewpager.widget.ViewPager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
+import com.kemikalreaktion.helios.data.Paper
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnBindCallback {
     private lateinit var paperViewModel: PaperViewModel
+    private lateinit var snapHelper: PositionalSnapHelper
     private var hasPermissions = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,10 +29,18 @@ class MainActivity : AppCompatActivity() {
         val factory = PaperViewModelFactory(this)
         paperViewModel = ViewModelProviders.of(this, factory).get(PaperViewModel::class.java)
 
-        val pagerAdapter = PaperPagerAdapter(supportFragmentManager, paperViewModel)
-        findViewById<ViewPager>(R.id.viewpager).adapter = pagerAdapter
+        val paperListAdapter = PaperListAdapter(paperViewModel)
+        paperListAdapter.callback = this
+        val viewManager = LinearLayoutManager(this, HORIZONTAL, false)
+        val recyclerView = findViewById<RecyclerView>(R.id.viewpager).apply {
+            setHasFixedSize(true)
+            layoutManager = viewManager
+            adapter = paperListAdapter
+        }
+        snapHelper = PositionalSnapHelper(recyclerView)
+        snapHelper.attachToRecyclerView(recyclerView)
         paperViewModel.allPaper.observe(this, androidx.lifecycle.Observer {
-            pagerAdapter.notifyDataSetChanged()
+            paperListAdapter.notifyDataSetChanged()
         })
     }
 
@@ -73,6 +83,53 @@ class MainActivity : AppCompatActivity() {
             }
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    override fun onViewHolderBound(viewHolder: PaperListAdapter.PaperViewHolder, position: Int) {
+        viewHolder.chooseButton.setOnClickListener { onButtonClicked(viewHolder.chooseButton) }
+        viewHolder.deleteButton.setOnClickListener { onButtonClicked(viewHolder.deleteButton) }
+    }
+
+    fun onButtonClicked(view: View) {
+        when(view.id) {
+            R.id.button_choose -> {
+                val intent = Intent(Intent.ACTION_PICK)
+                intent.type = "image/*"
+                intent.action = Intent.ACTION_GET_CONTENT
+                startActivityForResult(intent, REQUEST_CODE_CHOOSE_IMAGE)
+            }
+            R.id.button_delete -> {
+                paperViewModel.deletePaper(getCurrentPaper())
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
+        when(requestCode) {
+            REQUEST_CODE_CHOOSE_IMAGE -> {
+                if (resultCode == AppCompatActivity.RESULT_OK) {
+                    paperViewModel.getCropIntent(intent?.data!!)?.let { cropIntent ->
+                        startActivityForResult(cropIntent, REQUEST_CODE_CROP_IMAGE)
+                    }
+                }
+            }
+            REQUEST_CODE_CROP_IMAGE -> {
+                if (resultCode == AppCompatActivity.RESULT_OK) {
+                    val img = paperViewModel.addOrUpdatePaper(getCurrentPaper())
+                    snapHelper.getCurrentView()?.findViewById<ImageView>(R.id.wallpaper)?.setImageBitmap(img)
+                }
+            }
+        }
+    }
+
+    private fun getCurrentPaper(): Paper {
+        val position = snapHelper.getPosition()
+        paperViewModel.allPaper.value?.let { list ->
+            if (position < list.size) {
+                return list[position]
+            }
+        }
+        return Paper(position)
     }
 
     // TODO: mode this logic into PaperViewModel

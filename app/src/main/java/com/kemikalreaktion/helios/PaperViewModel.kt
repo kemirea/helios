@@ -8,11 +8,11 @@ import android.app.WallpaperManager.FLAG_SYSTEM
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import com.kemikalreaktion.helios.Util.getBitmapForPaper
 import com.kemikalreaktion.helios.data.Paper
 import com.kemikalreaktion.helios.data.PaperDatabase
 import com.kemikalreaktion.helios.data.PaperRepository
@@ -62,10 +62,10 @@ class PaperViewModel(private val context: Context) : ViewModel() {
     }
 
     // get bitmap for current PaperTime and set as current wallpaper
-    fun setForPaperTime(time: PaperTime) {
+    private fun setForPaperTime(time: PaperTime) {
         scope.launch(Dispatchers.IO) {
             paperRepository.getPaperForPaperTime(time)?.let { paper ->
-                getBitmapForPaper(context, paper)?.let { bitmap ->
+                getBitmapForPaper(paper)?.let { bitmap ->
                     try {
                         wallpaperManager.setBitmap(bitmap, null, true, paper.which)
                     } catch (e: IOException) {
@@ -139,14 +139,24 @@ class PaperViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun getIntentForTime(time: PaperTime): Intent {
+    fun getBitmapForPaper(paper: Paper?): Bitmap? {
+        paper?.let{
+            val file = File(context.filesDir, paper.filename)
+            if (file.exists()) {
+                return BitmapFactory.decodeFile(file.absolutePath)
+            }
+        }
+        return null
+    }
+
+    private fun getIntentForTime(time: PaperTime): Intent {
         return Intent(context, WallpaperBroadcastReceiver::class.java).let { intent ->
             intent.action = ACTION_APPLY_WALLPAPER
             intent.putExtra(EXTRA_PAPER_TIME, time.ordinal)
         }
     }
 
-    fun scheduleNextUpdate(time: PaperTime) {
+    private fun scheduleNextUpdate(time: PaperTime) {
         LocationHelper(context).getLocation()?.let { location ->
             val calculator = SunCalculator(location)
             val mAlarmManager: AlarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
