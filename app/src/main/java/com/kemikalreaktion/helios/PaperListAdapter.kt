@@ -11,7 +11,9 @@ import android.widget.Spinner
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.kemikalreaktion.helios.data.Paper
+import java.io.File
 
 /**
  * PagerAdapter for displaying Papers

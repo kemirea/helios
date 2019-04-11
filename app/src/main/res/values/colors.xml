@@ -10,5 +10,5 @@
     <color name="textColorSecondary">#ffffff</color>
     <color name="background">#777777</color>
 
-    <color name="empty_background">#DDDDDD</color>
+    <color name="empty_background">#FFFFFF</color>
 </resources>
