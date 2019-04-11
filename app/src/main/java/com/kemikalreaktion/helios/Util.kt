@@ -2,11 +2,15 @@ package com.kemikalreaktion.helios
 
 import android.Manifest
 import android.content.Context
+import android.content.Context.WINDOW_SERVICE
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.DisplayMetrics
+import android.util.Log
+import android.view.WindowManager
 import com.bumptech.glide.Glide
 import com.kemikalreaktion.helios.data.Paper
 import java.io.File
@@ -57,5 +61,13 @@ object Util {
 
     fun drawableToBitmapGlide(context: Context, drawable: Drawable): Bitmap {
         return Glide.with(context).asBitmap().load(drawable).submit().get()
+    }
+
+    fun getDisplayRatioString(context: Context): String {
+        val displayMetrics = DisplayMetrics()
+        val windowManager = context.getSystemService(WINDOW_SERVICE) as WindowManager
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val ratioFloat: Float = displayMetrics.widthPixels.toFloat() / displayMetrics.heightPixels.toFloat()
+        return "W,$ratioFloat"
     }
 }

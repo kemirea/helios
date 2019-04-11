@@ -8,6 +8,8 @@ import android.widget.AdapterView
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.Spinner
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.recyclerview.widget.RecyclerView
 import com.kemikalreaktion.helios.data.Paper
 
@@ -34,6 +36,11 @@ class PaperListAdapter(private val paperViewModel: PaperViewModel)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaperViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.paper_view_item, parent, false)
+
+        val set = ConstraintSet()
+        set.clone(view as ConstraintLayout)
+        set.setDimensionRatio(R.id.wallpaper, Util.getDisplayRatioString(parent.context))
+        set.applyTo(view)
         return PaperViewHolder(view)
     }
 

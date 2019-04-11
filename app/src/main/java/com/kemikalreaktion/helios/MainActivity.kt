@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_DENIED
-import android.util.Log
 import android.widget.ImageView
 import android.widget.LinearLayout.HORIZONTAL
 import android.widget.TextView
